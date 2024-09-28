@@ -48,11 +48,11 @@ def saveToExcel(genInfo, hoods):
     
     for k,v in hoods.items():
         #Capture Jet Hoods
-        if v.model in ['KVF', 'KVI', 'KCH-F', 'KCH-I', 'KSR-S', 'KSR-F', 'KSR-M']:
+        if v.model in ['KVF', 'KVI', 'KCH-F', 'KCH-I', 'KSR-S', 'KSR-F', 'KSR-M', 'UVF', 'UVI', 'USR-S', 'USR-F', 'USR-M']:
             colorFill(ws, row)
             ws[f'A{row}'].border = Border(top=Side(style='thin'),
             bottom=Side(style='thin'))
-            ws[f'j{row}'].border = Border(left=Side(style='thin'))
+            #ws[f'j{row}'].border = Border(left=Side(style='thin'))
             ws.row_dimensions[row].height = 20
             ws.merge_cells(f'A{row}:I{row}')
             genFont(ws, 'A', row, "EXTRACT AIR DATA")
@@ -124,6 +124,7 @@ def saveToExcel(genInfo, hoods):
             print(v.sections)
             totalFlowRate = 0
             percentage = 0
+            totalAchieved = 0
             for section, info in v.sections.items():
                 print(info)
                 print(f'{section} : {info}')
@@ -146,6 +147,7 @@ def saveToExcel(genInfo, hoods):
                 genFont(ws, 'F', row, f' {round(info['achieved'],2)}')
                 makeCenter(ws, 'F', row)
                 sectionBorder(ws, row, 6, 7)
+                totalAchieved+=round(info['achieved'],2)
                 #Design Flow
                 #ws.merge_cells(f'H{row}:I{row}')
                 genFont(ws, 'G', row, f' {info['designFlow']}')
@@ -168,9 +170,9 @@ def saveToExcel(genInfo, hoods):
             sectionBorder(ws, row, 1, 5)
             row+=1
             ws.merge_cells(f'A{row}:D{row}')    
-            genFont(ws, 'A', row, f'Total Percentage                                {percentage}%')
+            genFont(ws, 'A', row, f'Total Percentage                                {round((totalFlowRate/totalAchieved)*100,0)}%')
             sectionBorder(ws, row, 1, 5)
-            if v.model in ['KVF', 'KCH-F']:
+            if v.model in ['KVF', 'KCH-F', 'UVF', 'USR-F', 'KSR-F']:
                 #Supply Air Readings
                 row +=2
                 colorFill(ws, row)

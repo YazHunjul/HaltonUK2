@@ -2,6 +2,8 @@ import streamlit as st
 import math
 cj_hoods = ['KVF', 'KVI', 'KCH-F', 'KCH-I']
 cj_lp = ['KSR-S', 'KSR-F', 'KSR-M']
+cr_hoods = ['UVF', 'UVI']
+cr_lp_hoods = ['USR-S', 'USR-F', 'USR-M']
 
 cj_hoods_k_factor =  {
     1 : 71.8,
@@ -29,6 +31,26 @@ cj_hoods_supply_kfactor = {
     3000 : 365.1
 }
 
+cr_hoods_k_factor = {
+    1: 71.8,
+    2: 143.6,
+    3 : 215.4,
+    4 : 287.2,
+    5 : 359,
+    6: 430.8
+    }
+
+cr_lp_k_factor = {
+    1: 67.7,
+    2: 135.4,
+    3 : 203.1,
+    4 : 270.8,
+    5 : 338.5,
+    6: 406.2
+    }
+
+
+
 class cjHoods():
     def __init__(self, drawingNum, location, model, quantityOfSections) -> None:
         self.drawingNum = drawingNum
@@ -49,7 +71,7 @@ class cjHoods():
             st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-62px;'>{self.model} Section {i+1} Extract Info ({self.location})<h4>", unsafe_allow_html=True)
             col1, col2 = st.columns(2)
             st.markdown("<hr style='border:1px solid white;'>", unsafe_allow_html=True)
-            if selection in ['KVF', 'KCH-F']:
+            if selection in ['KVF', 'KCH-F', 'UVF', 'USR-F','KSR-F']:
                 st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-62px;'>{self.model} Section {i+1} Supply Info ({self.location})<h4>", unsafe_allow_html=True)
                 col3, col4 = st.columns(2)
                 st.markdown("<hr style='border:1px solid white;'>", unsafe_allow_html=True)
@@ -69,10 +91,15 @@ class cjHoods():
             #CJ LP HOODS KFACTOR
             elif selection in cj_lp:
                 self.k_factor = cj_lp_k_factor[self.ksaQuantity]
+            #CR HOODS
+            elif selection in cr_hoods:
+                self.k_factor = cr_hoods_k_factor[self.ksaQuantity]
+            elif selection in cr_lp_hoods:
+                self.k_factor = cr_lp_k_factor[self.ksaQuantity]
                 
             achievedFlowRate = self.k_factor * math.sqrt(self.tab_Reading)
             #IF FRESH AIR
-            if selection in ['KVF', 'KCH-F']:
+            if selection in ['KVF', 'KCH-F', 'UVF', 'KCH-F', 'USR-F', 'KSR-F']:
                 with col3:
                     st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-62px;'>Section {i+1} Plenum Length<h4>", unsafe_allow_html=True)
                     self.plenumLength = st.selectbox('.', [1000, 1500, 2000, 2500, 3000],key=f'plenumLength{selection}{num}{i}', label_visibility='hidden')
@@ -85,7 +112,7 @@ class cjHoods():
                     self.design_supply = st.number_input('.', key=f'design_sup{selection}{num}{i}', label_visibility='hidden', min_value=0.0)
                 supplyAchievedFlowRate = cj_hoods_supply_kfactor[self.plenumLength] * math.sqrt(self.tab_Reading_supply)
                 print(math.sqrt(self.tab_Reading))
-                self.sections[f'{i+1}'] = {"ksaQuantity" : self.ksaQuantity, "k_factor" : self.k_factor, 'tab_reading' : self.tab_Reading, 'designFlow' : self.design_flow, 'achieved' : round(achievedFlowRate,2), 'supplyKFactor' : cj_hoods_supply_kfactor[self.plenumLength], 'supplyTab' : self.tab_Reading_supply, 'supplyDesign' : round(self.design_supply,2), 'achievedSupply' : round(supplyAchievedFlowRate,2)}
+                self.sections[f'{i+1}'] = {"ksaQuantity" : self.ksaQuantity, "k_factor" : self.k_factor, 'tab_reading' : self.tab_Reading, 'designFlow' : self.design_flow, 'achieved' : round(achievedFlowRate,2), 'supplyKFactor' : supplyKFactor, 'supplyTab' : self.tab_Reading_supply, 'supplyDesign' : round(self.design_supply,2), 'achievedSupply' : round(supplyAchievedFlowRate,2)}
             else:
                 self.sections[f'{i+1}'] = {"ksaQuantity" : self.ksaQuantity, "k_factor" : self.k_factor, 'tab_reading' : self.tab_Reading, 'designFlow' : self.design_flow, 'achieved' : round(achievedFlowRate,2)}
 
@@ -95,7 +122,7 @@ def numCanopies():
     numInput = st.number_input('.', label_visibility='hidden', min_value=0)
     for num in range(numInput):
         st.markdown(f"<h3 style='text-align: center;margin-top: 30px;margin-bottom:-70px;'>Canopy {num+1}<h3>", unsafe_allow_html=True)
-        selection = st.selectbox('.',['','KVF', "KVI", "KCH-F", "KCH-I", "KSR-S", "KSR-F", "KSR-M", "UVI", "UVF"],key=f'selection{num}', label_visibility='hidden')
+        selection = st.selectbox('.',['','KVF', "KVI", "KCH-F", "KCH-I", "KSR-S", "KSR-F", "KSR-M", "UVI", "UVF", "USR-S", "USR-F", "USR-M"],key=f'selection{num}', label_visibility='hidden')
         #CJ HOODS
         hood = createCJHood(selection,num)
         hood.getCJSections(selection,num)
