@@ -49,7 +49,16 @@ cr_lp_k_factor = {
     6: 406.2
     }
 
+ww_hoods = ['KWF', 'KWI', "UWF", "UWI", "CMW-FMOD", "CMW-IMOD"]
 
+ww_hoods_kfactor = {
+    1 : 65.5,
+    2 : 131,
+    3 : 196.5,
+    4 : 262,
+    5 : 327.5,
+    6 : 393
+}
 
 class cjHoods():
     def __init__(self, drawingNum, location, model, quantityOfSections) -> None:
@@ -96,10 +105,12 @@ class cjHoods():
                 self.k_factor = cr_hoods_k_factor[self.ksaQuantity]
             elif selection in cr_lp_hoods:
                 self.k_factor = cr_lp_k_factor[self.ksaQuantity]
+            elif selection in ww_hoods:
+                self.k_factor = ww_hoods_kfactor[self.ksaQuantity]
                 
             achievedFlowRate = self.k_factor * math.sqrt(self.tab_Reading)
             #IF FRESH AIR
-            if selection in ['KVF', 'KCH-F', 'UVF', 'KCH-F', 'USR-F', 'KSR-F']:
+            if selection in ['KVF', 'KCH-F', 'UVF', 'KCH-F', 'USR-F', 'KSR-F', 'KWF', 'UWF', 'CMW-FMOD']:
                 with col3:
                     st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-62px;'>Section {i+1} Plenum Length<h4>", unsafe_allow_html=True)
                     self.plenumLength = st.selectbox('.', [1000, 1500, 2000, 2500, 3000],key=f'plenumLength{selection}{num}{i}', label_visibility='hidden')
@@ -122,7 +133,7 @@ def numCanopies():
     numInput = st.number_input('.', label_visibility='hidden', min_value=0)
     for num in range(numInput):
         st.markdown(f"<h3 style='text-align: center;margin-top: 30px;margin-bottom:-70px;'>Canopy {num+1}<h3>", unsafe_allow_html=True)
-        selection = st.selectbox('.',['','KVF', "KVI", "KCH-F", "KCH-I", "KSR-S", "KSR-F", "KSR-M", "UVI", "UVF", "USR-S", "USR-F", "USR-M"],key=f'selection{num}', label_visibility='hidden')
+        selection = st.selectbox('.',['','KVF', "KVI", "KCH-F", "KCH-I", "KSR-S", "KSR-F", "KSR-M", "UVI", "UVF", "USR-S", "USR-F", "USR-M", 'KWF', 'KWI', "UWF", "UWI", "CMW-FMOD", "CMW-IMOD"],key=f'selection{num}', label_visibility='hidden')
         #CJ HOODS
         hood = createCJHood(selection,num)
         hood.getCJSections(selection,num)

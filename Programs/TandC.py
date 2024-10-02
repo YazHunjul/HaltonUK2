@@ -21,15 +21,15 @@ def saveToExcel(genInfo, hoods):
     
     #General Information
     row=4
-    genFont(ws, 'A', row, f"CLIENT: {genInfo['client']} ")
+    genFont(ws, 'A', row, f"CLIENT: {genInfo['client'].title()} ")
     row+=2
-    genFont(ws, 'A', row, f"PROJECT NAME: {genInfo['project_name']} ")
+    genFont(ws, 'A', row, f"PROJECT NAME: {genInfo['project_name'].title()} ")
     row+=2
-    genFont(ws, 'A', row, f"PROJECT NUMBER: {genInfo['project_number']} ")
+    genFont(ws, 'A', row, f"PROJECT NUMBER: {genInfo['project_number'].title()} ")
     row+=2
     genFont(ws, 'A', row, f"DATE OF VISIT: {genInfo['date_of_visit']} ")
     row+=2
-    genFont(ws, 'A', row, f"ENGINEER(s): {genInfo['engineers']} ")
+    genFont(ws, 'A', row, f"ENGINEER(s): {genInfo['engineers'].title()} ")
     ws.row_breaks.append(openpyxl.worksheet.pagebreak.Break(id=row))
     row+=2
     #Canopy Air Readings
