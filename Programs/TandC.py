@@ -1,21 +1,23 @@
+import io
+
 from Programs import genInfo as GI, canopy as canopy
 import openpyxl
 from openpyxl.styles import Font, Border, Side, PatternFill, Alignment
+from openpyxl.drawing.image import Image
 import streamlit as st
+from PIL import Image as PILImage
 import math
 
 def TandC():
     GI.titleAndLogo("Testing And Commissioning")
     genInfo = GI.getGenInfo()
     hoods = canopy.numCanopies()
-    print(hoods)
-    for k,v in hoods.items():
-        print(v.model)
-    
+    comments = GI.get_comments()
+    sign = GI.get_sign()
     if st.button("Save to Excel"):
-        saveToExcel(genInfo, hoods)
+        saveToExcel(genInfo, hoods, comments, sign)
         
-def saveToExcel(genInfo, hoods):
+def saveToExcel(genInfo, hoods, comments, sign):
     wb = openpyxl.load_workbook('T&C_Templates.xlsx')
     ws = wb.active
     
@@ -30,6 +32,35 @@ def saveToExcel(genInfo, hoods):
     genFont(ws, 'A', row, f"DATE OF VISIT: {genInfo['date_of_visit']} ")
     row+=2
     genFont(ws, 'A', row, f"ENGINEER(s): {genInfo['engineers'].title()} ")
+    row+=4
+    # Apply the fill and border dynamically to a range of cells
+    if canopy.features:
+        genFont(ws, 'A', row, f"Your Kitchen Ventilation System has the following serviceable technology....")
+        ws[f'A{row}'].font = Font(bold=True, size=15)
+        row+=3
+        for feature, exists in canopy.features.items():
+            if feature == "CJ" and exists == "yes":
+                original_image = PILImage.open("features/C-RAY.png")
+                resized_image = original_image.resize((600, 150))  # Resize to 100x100 pixels
+                # Save the resized image (optional)
+                resized_image.save("resized_image.png")
+                # Load the resized image using openpyxl
+                img = Image("resized_image.png")
+
+                # Insert the image at the current row
+                ws.add_image(img, f'A{row}')
+                row+=5
+            if feature == "marvel" and exists == "yes":
+                original_image = PILImage.open("features/Marvel.png")
+                resized_image = original_image.resize((650, 150))  # Resize to 100x100 pixels
+                # Save the resized image (optional)
+                resized_image.save("resized_Marvel.png")
+                # Load the resized image using openpyxl
+                img = Image("resized_Marvel.png")
+                # Insert the image at the current row
+                ws.add_image(img, f'A{row}')
+                row += 5
+    row+=10
     ws.row_breaks.append(openpyxl.worksheet.pagebreak.Break(id=row))
     row+=2
     #Canopy Air Readings
@@ -43,9 +74,7 @@ def saveToExcel(genInfo, hoods):
     bottom=Side(style='thin')
 )
 
-    # Apply the fill and border dynamically to a range of cells
 
-    
     for k,v in hoods.items():
         #Capture Jet Hoods
         if v.model in ['KVF', 'KVI', 'KCH-F', 'KCH-I', 'KSR-S', 'KSR-F', 'KSR-M', 'UVF', 'UVI', 'USR-S', 'USR-F', 'USR-M']:
@@ -121,13 +150,10 @@ def saveToExcel(genInfo, hoods):
             sectionBorder(ws, row, 8,10)
             row+=1
             # Now Fill the Info (v.sections)
-            print(v.sections)
             totalFlowRate = 0
             percentage = 0
             totalAchieved = 0
             for section, info in v.sections.items():
-                print(info)
-                print(f'{section} : {info}')
                 #Mod Number
                 genFont(ws, 'A', row, section)
                 makeCenter(ws, 'A', row)
@@ -156,10 +182,12 @@ def saveToExcel(genInfo, hoods):
                 totalFlowRate += info['designFlow']
                 #Percentage
                 ws.merge_cells(f'H{row}:I{row}')
-                genFont(ws, 'H', row, f' {round(info['achieved']/info['designFlow'],0)}%')
+                if info['designFlow']:
+                    genFont(ws, 'H', row, f' {round(info['achieved']/info['designFlow'],0)}%')
                 makeCenter(ws, 'H', row)
                 sectionBorder(ws, row, 8,10)
-                percentage += round(info['achieved']/info['designFlow'],0)
+                if info['designFlow']:
+                    percentage += round(info['achieved']/info['designFlow'],0)
 
                 row+=1
                 #Total Flow Rate
@@ -169,8 +197,9 @@ def saveToExcel(genInfo, hoods):
             genFont(ws, 'A', row, f'Total Flowrate                                {totalFlowRate} m3/s')
             sectionBorder(ws, row, 1, 5)
             row+=1
-            ws.merge_cells(f'A{row}:D{row}')    
-            genFont(ws, 'A', row, f'Total Percentage                                {round((totalFlowRate/totalAchieved)*100,0)}%')
+            ws.merge_cells(f'A{row}:D{row}')
+            if totalFlowRate:
+                genFont(ws, 'A', row, f'Total Percentage                                {round((totalAchieved/totalFlowRate),0)}%')
             sectionBorder(ws, row, 1, 5)
             if v.model in ['KVF', 'KCH-F', 'UVF', 'USR-F', 'KSR-F']:
                 #Supply Air Readings
@@ -243,7 +272,6 @@ def saveToExcel(genInfo, hoods):
                 totPercentage = 0
                 for section2, info2 in v.sections.items():
                     #Mod Number
-                    print(v.sections.items())
                     genFont(ws, 'A', row, section2)
                     makeCenter(ws, 'A', row)
                     sectionBorder(ws, row, 1,2)
@@ -270,10 +298,12 @@ def saveToExcel(genInfo, hoods):
                     totalFlowRateSup += info2['supplyDesign']
                     #Percentage
                     ws.merge_cells(f'H{row}:I{row}')
-                    genFont(ws, 'H', row, f' {round(info2['achievedSupply']/info2['supplyDesign'], 0)}%')
+                    if info2['supplyDesign']:
+                        genFont(ws, 'H', row, f' {round(info2['achievedSupply']/info2['supplyDesign'], 0)}%')
                     makeCenter(ws, 'H', row)
                     sectionBorder(ws, row, 8, 10)
-                    totPercentage += round(info2['achievedSupply']/info2['supplyDesign'], 0)
+                    if info2['supplyDesign']:
+                        totPercentage += round(info2['achievedSupply']/info2['supplyDesign'], 0)
                     row+=1
                 colorFill2(ws, row)
                 row+=1
@@ -286,11 +316,99 @@ def saveToExcel(genInfo, hoods):
                 sectionBorder(ws, row, 1, 5)
                 row+=2
                 #Start of Result summary (Extract Air)
+        #CheckList
+
+        if v.model.startswith("UV"):
+            if v.checklist:
+                row+=3
+                genFont(ws, 'A', row, "UV CAPTURE RAY SYSTEM")
+                row+=2
+                colorFill2(ws, row)
+                ws[f'A{row}'] = "UV SYSTEM CHECK RESULTS"
+                row+=1
+                for check, value in v.checklist.items():
+                    ws[f'A{row}'] = check
+                    #fillBorder(ws, row, row)
+                    makeCenter(ws, 'A', row)
+                    sectionBorder(ws, row, 1, 4)
+                    ws.merge_cells(f'A{row}:C{row}')
+                    extendRow(ws, row)
+                    if value == True:
+                        genFont(ws, 'D', row, f'YES')
+                    elif value == False:
+                        genFont(ws, 'D', row, f'NO')
+                    else:
+                        genFont(ws, 'D', row, value)
+                    makeCenter(ws, 'D', row)
+                    sectionBorder(ws, row, 4, 5)
+                    row+=1
                 
-                
+
         elif v.model in ['KSR-S', 'KSR-F', 'KSR-M']:
             print('lol')
-            
+
+    #Additional Notes
+        row+=5
+        colorFill(ws, row)
+        genFont(ws, 'A', row, f'ADDITIONAL NOTES')
+        row+=1
+        for comment in comments:
+            ws[f'A{row}'] = comment
+            extendRow(ws, row)
+            ws.merge_cells(f'A{row}:I{row}')
+            makeCenter(ws, 'A', row)
+            ws[f'A{row}'].border = Border(left=Side(style='thin'))
+            ws[f'I{row}'].border = Border(right=Side(style='thin'))
+            row+=1
+        ws[f'A{row}'].border = Border(top=Side(style='thin'))
+        ws[f'B{row}'].border = Border(top=Side(style='thin'))
+        ws[f'C{row}'].border = Border(top=Side(style='thin'))
+        ws[f'D{row}'].border = Border(top=Side(style='thin'))
+        ws[f'E{row}'].border = Border(top=Side(style='thin'))
+        ws[f'F{row}'].border = Border(top=Side(style='thin'))
+        ws[f'G{row}'].border = Border(top=Side(style='thin'))
+        ws[f'H{row}'].border = Border(top=Side(style='thin'))
+        ws[f'I{row}'].border = Border(top=Side(style='thin'))
+        genFont(ws, 'A', row, "Date")
+        genFont(ws, 'C', row, f"{genInfo['date_of_visit']}")
+        ws.merge_cells(f'A{row}:B{row}')
+        ws.merge_cells(f'C{row}:I{row}')
+        sectionBorder(ws, row, 1, 3)
+        sectionBorder(ws, row, 3, 10)
+        row+=1
+        genFont(ws, 'A', row, "Print")
+        genFont(ws, 'C', row, f"{genInfo['engineers']}")
+        ws.merge_cells(f'A{row}:B{row}')
+        ws.merge_cells(f'C{row}:I{row}')
+        sectionBorder(ws, row, 1, 3)
+        sectionBorder(ws, row, 3, 10)
+        row += 1
+        if sign.image_data is not None:
+            img = PILImage.fromarray(sign.image_data.astype('uint8'), 'RGBA')
+
+            # Step 1: Resize the image (change dimensions as needed, e.g., 150x75 pixels)
+            resized_img = img.resize((200, 75))  # Resize to desired dimensions
+
+            # Step 2: Save the resized image in-memory and to a file
+            img_io = io.BytesIO()
+            resized_img.save(img_io, format='PNG')
+            img_io.seek(0)
+
+            with open("resized_signature_image.png", "wb") as f:
+                f.write(img_io.read())
+
+            # Step 3: Load the resized image into openpyxl
+            signature_img = Image("resized_signature_image.png")
+
+            # Step 4: Insert the signature into the Excel file
+            genFont(ws, 'A', row, "Sign")
+            ws.merge_cells(f'A{row}:B{row}')
+            sectionBorder(ws, row, 1, 3)
+            row+=2
+            ws.add_image(signature_img, f"A{row}")  # Insert the signature at cell C{row}
+            ws.merge_cells(f'C{row}:I{row}')
+            row+=20
+
             
         ws.row_breaks.append(openpyxl.worksheet.pagebreak.Break(id=row))  # Break after Row 20 (before row 21)
             #End of Capture Jet Hoods
@@ -356,6 +474,7 @@ def colorFill(ws, row):
                 cell = ws.cell(row=row, column=col)
                 cell.fill = fill_style  # Apply fill
                 cell.border = thin_border  # Apply border
+
 def colorFill2(ws, row):
     fill_style = PatternFill(start_color="9ac9f4", end_color="9ac9f4", fill_type="solid")
 # Define a border (thin border for all sides)
