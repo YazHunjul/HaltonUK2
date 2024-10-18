@@ -61,7 +61,6 @@ ww_hoods_kfactor = {
 }
 
 features = {
-
 }
 
 class cjHoods():
@@ -161,7 +160,6 @@ def checklist(hood, location):
         with_cj = st.checkbox(f"{(hood.split(' '))[0]} ({location}) With Capture Jet?")
         if with_cj:
             features['CJ'] = "yes"
-
             st.write("UV Capture Ray System")
             col1, col2,col3, col4 = st.columns(4)
             with col1:

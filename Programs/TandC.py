@@ -34,7 +34,7 @@ def saveToExcel(genInfo, hoods, comments, sign):
     genFont(ws, 'A', row, f"ENGINEER(s): {genInfo['engineers'].title()} ")
     row+=4
     # Apply the fill and border dynamically to a range of cells
-    if canopy.features:
+    if canopy.features and len(canopy.features) > 0:
         genFont(ws, 'A', row, f"Your Kitchen Ventilation System has the following serviceable technology....")
         ws[f'A{row}'].font = Font(bold=True, size=15)
         row+=3
