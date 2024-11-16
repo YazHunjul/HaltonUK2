@@ -6,18 +6,21 @@ from openpyxl.styles import Font, Border, Side, PatternFill, Alignment
 from openpyxl.drawing.image import Image
 import streamlit as st
 from PIL import Image as PILImage
+from openpyxl.worksheet.header_footer import HeaderFooter
 import math
+from openpyxl.styles import Font
 
 def TandC():
     GI.titleAndLogo("Testing And Commissioning")
     genInfo = GI.getGenInfo()
-    hoods = canopy.numCanopies()
+    hoods, edge_box_details = canopy.numCanopies()  # Unpack returned values
     comments = GI.get_comments()
     sign = GI.get_sign()
+
     if st.button("Save to Excel"):
-        saveToExcel(genInfo, hoods, comments, sign)
+        saveToExcel(genInfo, hoods, comments, sign, edge_box_details)
         
-def saveToExcel(genInfo, hoods, comments, sign):
+def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
     wb = openpyxl.load_workbook('T&C_Templates.xlsx')
     ws = wb.active
     
@@ -35,31 +38,27 @@ def saveToExcel(genInfo, hoods, comments, sign):
     row+=4
     # Apply the fill and border dynamically to a range of cells
     if canopy.features and len(canopy.features) > 0:
-        genFont(ws, 'A', row, f"Your Kitchen Ventilation System has the following serviceable technology....")
+        genFont(ws, 'A', row, "Your Kitchen Ventilation System has the following serviceable technology:")
         ws[f'A{row}'].font = Font(bold=True, size=15)
-        row+=3
-        for feature, exists in canopy.features.items():
-            if feature == "CJ" and exists == "yes":
-                original_image = PILImage.open("features/C-RAY.png")
-                resized_image = original_image.resize((600, 150))  # Resize to 100x100 pixels
-                # Save the resized image (optional)
-                resized_image.save("resized_image.png")
-                # Load the resized image using openpyxl
-                img = Image("resized_image.png")
+        row += 3
 
-                # Insert the image at the current row
-                ws.add_image(img, f'A{row}')
-                row+=5
-            if feature == "marvel" and exists == "yes":
-                original_image = PILImage.open("features/Marvel.png")
-                resized_image = original_image.resize((650, 150))  # Resize to 100x100 pixels
-                # Save the resized image (optional)
-                resized_image.save("resized_Marvel.png")
-                # Load the resized image using openpyxl
-                img = Image("resized_Marvel.png")
-                # Insert the image at the current row
-                ws.add_image(img, f'A{row}')
-                row += 5
+        # Display UV Image if Selected
+        if canopy.features.get("CJ") == "yes":
+            original_image = PILImage.open("features/C-RAY.png")
+            resized_image = original_image.resize((600, 150))  # Resize the image
+            resized_image.save("resized_image.png")
+            img = Image("resized_image.png")
+            ws.add_image(img, f'A{row}')
+            row += 8  # Adjust the row position after the image
+
+        # Display M.A.R.V.E.L. Image if Selected
+        if canopy.features.get("marvel") == "yes":
+            original_image = PILImage.open("features/Marvel.png")
+            resized_image = original_image.resize((620, 130))  # Resize the image
+            resized_image.save("resized_Marvel.png")
+            img = Image("resized_Marvel.png")
+            ws.add_image(img, f'A{row}')
+            row += 5  # Adjust the row position after the image
     row+=10
     ws.row_breaks.append(openpyxl.worksheet.pagebreak.Break(id=row))
     row+=2
@@ -77,17 +76,18 @@ def saveToExcel(genInfo, hoods, comments, sign):
 
     for k,v in hoods.items():
         #Capture Jet Hoods
-        if v.model in ['KVF', 'KVI', 'KCH-F', 'KCH-I', 'KSR-S', 'KSR-F', 'KSR-M', 'UVF', 'UVI', 'USR-S', 'USR-F', 'USR-M']:
+        if v.model in ['KVF', 'KVI', 'KCH-F', 'KCH-I', 'KSR-S', 'KSR-F', 'KSR-M', 'UVF', 'UVI', 'USR-S', 'USR-F', 'USR-M', 'UWF']:
             colorFill(ws, row)
             ws[f'A{row}'].border = Border(top=Side(style='thin'),
             bottom=Side(style='thin'))
             #ws[f'j{row}'].border = Border(left=Side(style='thin'))
             ws.row_dimensions[row].height = 20
             ws.merge_cells(f'A{row}:I{row}')
+            colorFill(ws, row)  # Apply the fill and border to the entire range
             genFont(ws, 'A', row, "EXTRACT AIR DATA")
             makeCenter(ws, 'A', row)
             row+=1
-            genFont(ws, 'A', row,f'Drawing Number: \t{v.drawingNum}')
+            genFont(ws, 'A', row,f'Drawing Number: {genInfo.get('project_number', 'Unknown')}-{v.drawingNum}')
             fillBorder(ws, 'A', row)
             iBorder(ws, 'i', row)
             row+=1
@@ -209,7 +209,7 @@ def saveToExcel(genInfo, hoods, comments, sign):
                 genFont(ws, 'A', row, "SUPPLY AIR DATA")
                 makeCenter(ws, 'A', row)
                 row+=1
-                genFont(ws, 'A', row,f'Drawing Number: \t{v.drawingNum}')
+                genFont(ws, 'A', row,f"{genInfo.get('project_number', 'Unknown')}-{v.drawingNum}")
                 fillBorder(ws, 'A', row)
                 iBorder(ws, 'i', row)
                 row+=1
@@ -318,96 +318,330 @@ def saveToExcel(genInfo, hoods, comments, sign):
                 #Start of Result summary (Extract Air)
         #CheckList
 
-        if v.model.startswith("UV"):
-            if v.checklist:
-                row+=3
-                genFont(ws, 'A', row, "UV CAPTURE RAY SYSTEM")
-                row+=2
-                colorFill2(ws, row)
-                ws[f'A{row}'] = "UV SYSTEM CHECK RESULTS"
-                row+=1
-                for check, value in v.checklist.items():
-                    ws[f'A{row}'] = check
-                    #fillBorder(ws, row, row)
-                    makeCenter(ws, 'A', row)
-                    sectionBorder(ws, row, 1, 4)
-                    ws.merge_cells(f'A{row}:C{row}')
-                    extendRow(ws, row)
-                    if value == True:
-                        genFont(ws, 'D', row, f'YES')
-                    elif value == False:
-                        genFont(ws, 'D', row, f'NO')
-                    else:
-                        genFont(ws, 'D', row, value)
-                    makeCenter(ws, 'D', row)
-                    sectionBorder(ws, row, 4, 5)
-                    row+=1
+        if "UV Capture Jet" in v.checklist:
+            row += 2
+            # Add color-filled title for UV section
+            colorFill(ws, row)
+            ws.merge_cells(f'A{row}:I{row}')
+            genFont(ws, 'A', row, f"UV CAPTURE RAY SYSTEM FOR {v.model}")
+            makeCenter(ws, 'A', row)
+            row += 1
+
+            # Add checklist items
+            for check, value in v.checklist["UV Capture Jet"].items():
+                # Add description in A:G
+                ws.merge_cells(f'A{row}:G{row}')
+                genFont(ws, 'A', row, check)
                 
+                # Add value in H:I
+                ws.merge_cells(f'H{row}:I{row}')
+                if value is True:
+                    ws[f'H{row}'] = "✓"
+                elif value is False:
+                    ws[f'H{row}'] = ""
+                else:
+                    ws[f'H{row}'] = value
+                makeCenter(ws, 'H', row)
+
+                # Apply borders to H and I
+                border = Border(
+                    top=Side(style='thin'),
+                    bottom=Side(style='thin'),
+                    left=Side(style='thin'),
+                    right=Side(style='thin')
+                )
+                ws[f'H{row}'].border = border
+                ws[f'I{row}'].border = border
+
+                # Apply borders to the entire row
+                sectionBorder(ws, row, 1, 9)
+                row += 1
+
+        # Add M.A.R.V.E.L. details if available
+        if "M.A.R.V.E.L. System" in v.checklist:
+            row += 2
+            # Add color-filled title for Marvel section
+            colorFill(ws, row)
+            ws.merge_cells(f'A{row}:I{row}')
+            genFont(ws, 'A', row, f"M.A.R.V.E.L. SYSTEM FOR {v.model}")
+            makeCenter(ws, 'A', row)
+            row += 1
+
+            # Add checklist items
+            for check, value in v.checklist["M.A.R.V.E.L. System"].items():
+                # Add description in A:G
+                ws.merge_cells(f'A{row}:G{row}')
+                genFont(ws, 'A', row, check)
+                
+                # Add value in H:I
+                ws.merge_cells(f'H{row}:I{row}')
+                if value is True:
+                    ws[f'H{row}'] = "✓"
+                elif value is False:
+                    ws[f'H{row}'] = ""
+                else:
+                    ws[f'H{row}'] = value
+                makeCenter(ws, 'H', row)
+
+                # Apply borders to H and I
+                border = Border(
+                    top=Side(style='thin'),
+                    bottom=Side(style='thin'),
+                    left=Side(style='thin'),
+                    right=Side(style='thin')
+                )
+                ws[f'H{row}'].border = border
+                ws[f'I{row}'].border = border
+
+                # Apply borders to the entire row
+                sectionBorder(ws, row, 1, 9)
+                row += 1
+
+
+                        
 
         elif v.model in ['KSR-S', 'KSR-F', 'KSR-M']:
             print('lol')
+            
+        row+=3
+        #Results
+       # Results Summary - Extract Air
+         # Results Summary for Extract Air
+    extract_summary = []
+    supply_summary = []
+    total_extract_design = 0
+    total_extract_actual = 0
+    total_supply_design = 0
+    total_supply_actual = 0
 
-    #Additional Notes
-        row+=5
-        colorFill(ws, row)
-        genFont(ws, 'A', row, f'ADDITIONAL NOTES')
-        row+=1
-        for comment in comments:
-            ws[f'A{row}'] = comment
-            extendRow(ws, row)
-            ws.merge_cells(f'A{row}:I{row}')
-            makeCenter(ws, 'A', row)
-            ws[f'A{row}'].border = Border(left=Side(style='thin'))
-            ws[f'I{row}'].border = Border(right=Side(style='thin'))
-            row+=1
-        ws[f'A{row}'].border = Border(top=Side(style='thin'))
-        ws[f'B{row}'].border = Border(top=Side(style='thin'))
-        ws[f'C{row}'].border = Border(top=Side(style='thin'))
-        ws[f'D{row}'].border = Border(top=Side(style='thin'))
-        ws[f'E{row}'].border = Border(top=Side(style='thin'))
-        ws[f'F{row}'].border = Border(top=Side(style='thin'))
-        ws[f'G{row}'].border = Border(top=Side(style='thin'))
-        ws[f'H{row}'].border = Border(top=Side(style='thin'))
-        ws[f'I{row}'].border = Border(top=Side(style='thin'))
-        genFont(ws, 'A', row, "Date")
-        genFont(ws, 'C', row, f"{genInfo['date_of_visit']}")
-        ws.merge_cells(f'A{row}:B{row}')
-        ws.merge_cells(f'C{row}:I{row}')
-        sectionBorder(ws, row, 1, 3)
-        sectionBorder(ws, row, 3, 10)
-        row+=1
-        genFont(ws, 'A', row, "Print")
-        genFont(ws, 'C', row, f"{genInfo['engineers']}")
-        ws.merge_cells(f'A{row}:B{row}')
-        ws.merge_cells(f'C{row}:I{row}')
-        sectionBorder(ws, row, 1, 3)
-        sectionBorder(ws, row, 3, 10)
+    # Iterate over each canopy to process both Extract and Supply Air
+    for canopy_num, hood in hoods.items():
+        drawing_number = f"{genInfo.get('project_number', 'Unknown')}-{hood.drawingNum}"  # Format the drawing number
+
+        # Initialize per-drawing totals
+        extract_design_total = 0
+        extract_actual_total = 0
+        supply_design_total = 0
+        supply_actual_total = 0
+
+        # Process Extract Air sections
+        if hood.model in ['KVF', 'KVI', 'KCH-F', 'KCH-I', 'KSR-S', 'KSR-F', 'KSR-M', 'UVF', 'UVI', 'USR-S', 'USR-F', 'USR-M']:
+            for section_data in hood.sections.values():
+                extract_design_total += section_data['designFlow']
+                extract_actual_total += section_data['achieved']
+
+        # Process Supply Air sections if applicable
+        if hood.model in ['KVF', 'KCH-F', 'UVF', 'USR-F', 'KSR-F', 'KWF', 'UWF', 'CMW-FMOD']:
+            for section_data in hood.sections.values():
+                supply_design_total += section_data['supplyDesign']
+                supply_actual_total += section_data['achievedSupply']
+
+        # Calculate percentage and store results for each drawing
+        if extract_design_total > 0:
+            extract_percentage = round((extract_actual_total / extract_design_total) * 100, 1)
+            extract_summary.append({
+                "drawing_number": drawing_number,
+                "design_flow_rate_total": extract_design_total,
+                "actual_flow_rate_total": extract_actual_total,
+                "percentage": extract_percentage
+            })
+            total_extract_design += extract_design_total
+            total_extract_actual += extract_actual_total
+
+        if supply_design_total > 0:
+            supply_percentage = round((supply_actual_total / supply_design_total) * 100, 1)
+            supply_summary.append({
+                "drawing_number": drawing_number,
+                "design_flow_rate_total": supply_design_total,
+                "actual_flow_rate_total": supply_actual_total,
+                "percentage": supply_percentage
+            })
+            total_supply_design += supply_design_total
+            total_supply_actual += supply_actual_total
+
+    # Display Results Summary for Extract Air
+    row += 2
+    genFont(ws, 'A', row, "RESULTS SUMMARY - EXTRACT AIR")
+    row += 1
+    colorFill(ws, row)
+
+    # Header for Extract Air Summary Table
+    ws.merge_cells('A{0}:B{0}'.format(row))
+    genFont(ws, 'A', row, "Drawing Number")
+    ws.merge_cells('C{0}:D{0}'.format(row))
+    genFont(ws, 'C', row, "Design Flow Rate (m³/s)")
+    ws.merge_cells('E{0}:F{0}'.format(row))
+    genFont(ws, 'E', row, "Actual Flowrate (m³/s)")
+    ws.merge_cells('G{0}:H{0}'.format(row))
+    genFont(ws, 'G', row, "Percentage of Design")
+    sectionBorder(ws, row, 1, 9)
+    row += 1
+
+    # Populate Extract Air Summary Table
+    for result in extract_summary:
+        ws.merge_cells('A{0}:B{0}'.format(row))
+        genFont(ws, 'A', row, result["drawing_number"])
+        ws.merge_cells('C{0}:D{0}'.format(row))
+        genFont(ws, 'C', row, f"{result['design_flow_rate_total']}")
+        ws.merge_cells('E{0}:F{0}'.format(row))
+        genFont(ws, 'E', row, f"{result['actual_flow_rate_total']}")
+        ws.merge_cells('G{0}:H{0}'.format(row))
+        genFont(ws, 'G', row, f"{result['percentage']}%")
+        sectionBorder(ws, row, 1, 9)
         row += 1
-        if sign.image_data is not None:
-            img = PILImage.fromarray(sign.image_data.astype('uint8'), 'RGBA')
 
-            # Step 1: Resize the image (change dimensions as needed, e.g., 150x75 pixels)
-            resized_img = img.resize((200, 75))  # Resize to desired dimensions
+    # Totals row for Extract Air Summary
+    ws.merge_cells('A{0}:B{0}'.format(row))
+    genFont(ws, 'A', row, "TOTAL")
+    ws.merge_cells('C{0}:D{0}'.format(row))
+    genFont(ws, 'C', row, f"{total_extract_design}")
+    ws.merge_cells('E{0}:F{0}'.format(row))
+    genFont(ws, 'E', row, f"{total_extract_actual}")
+    ws.merge_cells('G{0}:H{0}'.format(row))
+    overall_extract_percentage = round((total_extract_actual / total_extract_design) * 100, 1) if total_extract_design > 0 else 0
+    genFont(ws, 'G', row, f"{overall_extract_percentage}%")
+    sectionBorder(ws, row, 1, 9)
+    row += 3
 
-            # Step 2: Save the resized image in-memory and to a file
-            img_io = io.BytesIO()
-            resized_img.save(img_io, format='PNG')
-            img_io.seek(0)
+    # Display Results Summary for Supply Air
+    genFont(ws, 'A', row, "RESULTS SUMMARY - SUPPLY AIR")
+    row += 1
+    colorFill(ws, row)
 
-            with open("resized_signature_image.png", "wb") as f:
-                f.write(img_io.read())
+    # Header for Supply Air Summary Table
+    ws.merge_cells('A{0}:B{0}'.format(row))
+    genFont(ws, 'A', row, "Drawing Number")
+    ws.merge_cells('C{0}:D{0}'.format(row))
+    genFont(ws, 'C', row, "Design Flow Rate (m³/s)")
+    ws.merge_cells('E{0}:F{0}'.format(row))
+    genFont(ws, 'E', row, "Actual Flowrate (m³/s)")
+    ws.merge_cells('G{0}:H{0}'.format(row))
+    genFont(ws, 'G', row, "Percentage of Design")
+    sectionBorder(ws, row, 1, 9)
+    row += 1
 
-            # Step 3: Load the resized image into openpyxl
-            signature_img = Image("resized_signature_image.png")
+    # Populate Supply Air Summary Table
+    for result in supply_summary:
+        ws.merge_cells('A{0}:B{0}'.format(row))
+        genFont(ws, 'A', row, result["drawing_number"])
+        ws.merge_cells('C{0}:D{0}'.format(row))
+        genFont(ws, 'C', row, f"{result['design_flow_rate_total']}")
+        ws.merge_cells('E{0}:F{0}'.format(row))
+        genFont(ws, 'E', row, f"{result['actual_flow_rate_total']}")
+        ws.merge_cells('G{0}:H{0}'.format(row))
+        genFont(ws, 'G', row, f"{result['percentage']}%")
+        sectionBorder(ws, row, 1, 9)
+        row += 1
 
-            # Step 4: Insert the signature into the Excel file
-            genFont(ws, 'A', row, "Sign")
-            ws.merge_cells(f'A{row}:B{row}')
-            sectionBorder(ws, row, 1, 3)
-            row+=2
-            ws.add_image(signature_img, f"A{row}")  # Insert the signature at cell C{row}
-            ws.merge_cells(f'C{row}:I{row}')
-            row+=20
+    # Totals row for Supply Air Summary
+    ws.merge_cells('A{0}:B{0}'.format(row))
+    genFont(ws, 'A', row, "TOTAL")
+    ws.merge_cells('C{0}:D{0}'.format(row))
+    genFont(ws, 'C', row, f"{total_supply_design}")
+    ws.merge_cells('E{0}:F{0}'.format(row))
+    genFont(ws, 'E', row, f"{total_supply_actual}")
+    ws.merge_cells('G{0}:H{0}'.format(row))
+    overall_supply_percentage = round((total_supply_actual / total_supply_design) * 100, 1) if total_supply_design > 0 else 0
+    genFont(ws, 'G', row, f"{overall_supply_percentage}%")
+    sectionBorder(ws, row, 1, 9)
+    
+    if edge_box_details:
+    # Add header row with blue fill
+        row += 5
+        genFont(ws, 'A', row, "FINAL SYSTEM CHECKS")
+        row += 1
+        colorFill(ws, row)  # Blue background
+        ws.merge_cells(f'A{row}:G{row}')
+        ws.merge_cells(f'H{row}:I{row}')
+        genFont(ws, 'A', row, "EDGE BOX")
+        makeCenter(ws, 'A', row)
+
+        # Add Edge Box parameters
+        row += 1
+        for key, value in edge_box_details.items():
+            # Merge columns A:G for the parameter name
+            ws.merge_cells(f'A{row}:G{row}')
+            genFont(ws, 'A', row, key)
+
+            # Merge columns H:I for the parameter value
+            ws.merge_cells(f'H{row}:I{row}')
+            if value is True:
+                ws[f'H{row}'] = "✓"
+            elif value is False:
+                ws[f'H{row}'] = ""
+            else:
+                ws[f'H{row}'] = value  # For non-boolean values
+
+            # Center-align the value
+            makeCenter(ws, 'H', row)
+
+            # Add borders for the row
+            sectionBorder(ws, row, 1, 10)
+            row += 1
+                
+                
+    #Additional Notes
+    row+=5
+    colorFill(ws, row)
+    ws.merge_cells('A{0}:I{0}'.format(row))
+    genFont(ws, 'A', row, f'ADDITIONAL NOTES')
+    row+=1
+    for comment in comments:
+        ws[f'A{row}'] = comment
+        extendRow(ws, row)
+        ws.merge_cells(f'A{row}:I{row}')
+        makeCenter(ws, 'A', row)
+        ws[f'A{row}'].border = Border(left=Side(style='thin'))
+        ws[f'I{row}'].border = Border(right=Side(style='thin'))
+        row+=1
+    ws[f'A{row}'].border = Border(top=Side(style='thin'))
+    ws[f'B{row}'].border = Border(top=Side(style='thin'))
+    ws[f'C{row}'].border = Border(top=Side(style='thin'))
+    ws[f'D{row}'].border = Border(top=Side(style='thin'))
+    ws[f'E{row}'].border = Border(top=Side(style='thin'))
+    ws[f'F{row}'].border = Border(top=Side(style='thin'))
+    ws[f'G{row}'].border = Border(top=Side(style='thin'))
+    ws[f'H{row}'].border = Border(top=Side(style='thin'))
+    ws[f'I{row}'].border = Border(top=Side(style='thin'))
+    genFont(ws, 'A', row, "Date")
+    genFont(ws, 'C', row, f"{genInfo['date_of_visit']}")
+    ws.merge_cells(f'A{row}:B{row}')
+    ws.merge_cells(f'C{row}:I{row}')
+    sectionBorder(ws, row, 1, 3)
+    sectionBorder(ws, row, 3, 10)
+    row+=1
+    genFont(ws, 'A', row, "Print")
+    genFont(ws, 'C', row, f"{genInfo['engineers']}")
+    ws.merge_cells(f'A{row}:B{row}')
+    ws.merge_cells(f'C{row}:I{row}')
+    sectionBorder(ws, row, 1, 3)
+    sectionBorder(ws, row, 3, 10)
+    row += 1
+    if sign.image_data is not None:
+        img = PILImage.fromarray(sign.image_data.astype('uint8'), 'RGBA')
+
+        # Step 1: Resize the image (change dimensions as needed, e.g., 150x75 pixels)
+        resized_img = img.resize((200, 75))  # Resize to desired dimensions
+
+        # Step 2: Save the resized image in-memory and to a file
+        img_io = io.BytesIO()
+        resized_img.save(img_io, format='PNG')
+        img_io.seek(0)
+
+        with open("resized_signature_image.png", "wb") as f:
+            f.write(img_io.read())
+
+        # Step 3: Load the resized image into openpyxl
+        signature_img = Image("resized_signature_image.png")
+
+        # Step 4: Insert the signature into the Excel file
+        genFont(ws, 'A', row, "Sign")
+        ws.merge_cells(f'A{row}:B{row}')
+        sectionBorder(ws, row, 1, 3)
+        row+=2
+        ws.add_image(signature_img, f"A{row}")  # Insert the signature at cell C{row}
+        ws.merge_cells(f'C{row}:I{row}')
+        row+=20
 
             
         ws.row_breaks.append(openpyxl.worksheet.pagebreak.Break(id=row))  # Break after Row 20 (before row 21)
@@ -418,7 +652,7 @@ def saveToExcel(genInfo, hoods, comments, sign):
     
 
     # You can also add more rows if necessary, e.g., canopy details, etc.
-    
+    #applyMulishFont(ws)
     # Define the path for the new Excel file
     updated_workbook_path = f'T&C.xlsx'
     
@@ -464,25 +698,55 @@ def fillBorder(ws, letter, row):
             cell.border = thin_border  # Apply border
             
 def colorFill(ws, row):
-    fill_style = PatternFill(start_color="9ac9f4", end_color="9ac9f4", fill_type="solid")
-# Define a border (thin border for all sides)
+    fill_style = PatternFill(start_color="2499D5", end_color="2499D5", fill_type="solid")
     thin_border = Border(
-    top=Side(style='thin'),
-    bottom=Side(style='thin')
-)
-    for col in range(1, 10):  # Column A to B (1 to 2)
-                cell = ws.cell(row=row, column=col)
-                cell.fill = fill_style  # Apply fill
-                cell.border = thin_border  # Apply border
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+
+    # Define the start and end columns for the merged range
+    start_col = 1  # Column A
+    end_col = 9    # Column I
+
+    # Loop through each column in the merged range
+    for col in range(start_col, end_col + 1):
+        cell = ws.cell(row=row, column=col)
+        cell.fill = fill_style
+        cell.border = thin_border
+
+    # Ensure the left and right borders for the first and last columns
+    ws.cell(row=row, column=start_col).border = Border(
+        left=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    ws.cell(row=row, column=end_col).border = Border(
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
 
 def colorFill2(ws, row):
-    fill_style = PatternFill(start_color="9ac9f4", end_color="9ac9f4", fill_type="solid")
+    fill_style = PatternFill(start_color="2499D5", end_color="2499D5", fill_type="solid")
 # Define a border (thin border for all sides)
     thin_border = Border(
     top=Side(style='thin'),
     bottom=Side(style='thin')
 )
     for col in range(1, 5):  # Column A to B (1 to 2)
-                cell = ws.cell(row=row, column=col)
-                cell.fill = fill_style  # Apply fill
-                cell.border = thin_border  # Apply border
+        cell = ws.cell(row=row, column=col)
+        cell.fill = fill_style  # Apply fill
+        cell.border = thin_border  # Apply border
+        
+def applyMulishFont(ws):
+    """
+    Apply Mulish font to all cells in the worksheet.
+    """
+    mulish_font = Font(name='Arial', size=11)  # Define the Mulish font
+
+    for row in ws.iter_rows():
+        for cell in row:
+            if cell.value:  # Apply font only if the cell contains content
+                cell.font = mulish_font
