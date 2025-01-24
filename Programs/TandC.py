@@ -337,7 +337,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
             # Add color-filled title for UV section
             colorFill(ws, row)
             ws.merge_cells(f'A{row}:I{row}')
-            genFont(ws, 'A', row, f"UV CAPTURE RAY SYSTEM FOR {v.model}")
+            genFont(ws, 'A', row, f"UV CAPTURE RAY SYSTEM FOR {v.model}", "FFFFFF")
             makeCenter(ws, 'A', row)
             row += 1
 
@@ -377,7 +377,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
             # Add color-filled title for Marvel section
             colorFill(ws, row)
             ws.merge_cells(f'A{row}:I{row}')
-            genFont(ws, 'A', row, f"M.A.R.V.E.L. SYSTEM FOR {v.model}")
+            genFont(ws, 'A', row, f"M.A.R.V.E.L. SYSTEM FOR {v.model}", "FFFFFF")
             makeCenter(ws, 'A', row)
             row += 1
 
@@ -787,17 +787,14 @@ def colorFill(ws, row):
     )
 
 def colorFill2(ws, row):
-    fill_style = PatternFill(start_color="2499D5", end_color="2499D5", fill_type="solid")
-# Define a border (thin border for all sides)
-    thin_border = Border(
-    top=Side(style='thin'),
-    bottom=Side(style='thin')
-)
-    for col in range(1, 5):  # Column A to B (1 to 2)
-        cell = ws.cell(row=row, column=col)
-        cell.fill = fill_style  # Apply fill
-        cell.border = thin_border  # Apply border
-        
+    ws.merge_cells(f'A{row}:D{row}')
+    for col in ['A', 'B', 'C', 'D']:
+        ws[f'{col}{row}'].fill = PatternFill(start_color="2499D5", end_color="2499D5", fill_type="solid")
+    
+    # Add borders only on the left of A and right of D
+    ws[f'A{row}'].border = Border(left=Side(style='thin'))
+    ws[f'D{row}'].border = Border(right=Side(style='thin'))
+
 def applyMulishFont(ws):
     """
     Apply Mulish font to all cells in the worksheet.
