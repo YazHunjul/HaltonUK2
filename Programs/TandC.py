@@ -43,7 +43,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
         row += 3
 
         # Display UV Image if Selected
-        if canopy.features.get("CJ") == "yes":
+        if "CJ" in canopy.features and canopy.features["CJ"] == True:
             original_image = PILImage.open("features/C-RAY.png")
             resized_image = original_image.resize((600, 150))  # Resize the image
             resized_image.save("resized_image.png")
@@ -52,7 +52,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
             row += 8  # Adjust the row position after the image
 
         # Display M.A.R.V.E.L. Image if Selected
-        if canopy.features.get("marvel") == "yes":
+        if "marvel" in canopy.features and canopy.features["marvel"] == True:
             original_image = PILImage.open("features/Marvel.png")
             resized_image = original_image.resize((620, 130))  # Resize the image
             resized_image.save("resized_Marvel.png")
