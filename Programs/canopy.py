@@ -221,7 +221,7 @@ def checklist(hood, location):
     if hood.startswith("UV"):
         with_uv = st.checkbox(f"{(hood.split(' '))[0]} ({location}) With UV Capture Jet?", key=f"uv_{hood}_{location}")
         if with_uv:
-            features["CJ"] = "yes"  # Add UV system to features
+            features["CJ"] = True
             st.write("UV Capture Ray System Checklist")
             col1, col2 = st.columns(2)
             with col1:
@@ -250,7 +250,7 @@ def checklist(hood, location):
     # M.A.R.V.E.L. System Checklist (available for all hoods)
     with_marvel = st.checkbox(f"{(hood.split(' '))[0]} ({location}) With M.A.R.V.E.L. System?", key=f"marvel_{hood}_{location}")
     if with_marvel:
-        features["marvel"] = "yes"  # Add M.A.R.V.E.L. system to features
+        features["marvel"] = True
         st.write("M.A.R.V.E.L. System Checklist")
         col1, col2 = st.columns(2)
         with col1:
