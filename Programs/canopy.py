@@ -73,11 +73,13 @@ new_hoods_kfactor = {
 features = {}
 
 class cjHoods():
-    def __init__(self, drawingNum, location, model, idNum, quantityOfSections) -> None:
+    def __init__(self, drawingNum, location, model, idNum, quantityOfSections, total_design_flow_ms, total_supply_design_flow_ms) -> None:
         self.drawingNum = drawingNum
         self.location = location
         self.model = model
         self.quantityOfSections = quantityOfSections
+        self.total_design_flow_ms = total_design_flow_ms
+        self.total_supply_design_flow_ms = total_supply_design_flow_ms
         self.ksaQuantity = 0
         self.sections = {}
         self.k_factor = 0
@@ -107,7 +109,7 @@ class cjHoods():
                 st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-60px;'>Section {i+1} T.A.B Point Reading<h4>", unsafe_allow_html=True)
                 self.tab_Reading = st.number_input('.', key=f'canopyLocs{selection}{num}{i}', label_visibility='hidden', min_value=0.0)
             with col1:
-                st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-70px;'>Section {i+1} Design Airflow<h4>", unsafe_allow_html=True)
+                st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-70px;'>Section {i+1} Flowrate (m^3/h)<h4>", unsafe_allow_html=True)
                 self.design_flow = st.number_input('.', key=f'designflow{selection}{num}{i}', label_visibility='hidden', min_value=0.0)
 
             # Assign K-factor based on hood type
@@ -288,7 +290,7 @@ def createCJHood(selection, num):
     Create a hood object and retrieve system-specific checks (UV or M.A.R.V.E.L.).
     """
     st.markdown(f"<h3 style='text-align: center;margin-top: 30px;margin-bottom:-70px;'>{selection} Info<h3>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-70px;'>Drawing Number<h4>", unsafe_allow_html=True)
         drawingNum = st.text_input('.', key=f'drawNum{num}', label_visibility='hidden')
@@ -296,10 +298,20 @@ def createCJHood(selection, num):
         st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-70px;'>Canopy Location<h4>", unsafe_allow_html=True)
         canopyLocation = st.text_input('.', key=f'canopyLoc{num}', label_visibility='hidden')
     with col3:
+        st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-70px;'>Extract Design Airflow (M³/s)<h4>", unsafe_allow_html=True)
+        total_design_flow_ms = st.number_input('.', key=f'total_design_flow_ms{num}', label_visibility='hidden', min_value=0.0)
+        
+        # Only show supply design flow for supply-capable hoods
+        if selection in ['KVF', 'KCH-F', 'UVF', 'USR-F', 'KSR-F', 'KWF', 'UWF', 'CMW-FMOD']:
+            st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-70px;'>Supply Design Airflow (M³/s)<h4>", unsafe_allow_html=True)
+            total_supply_design_flow_ms = st.number_input('.', key=f'total_supply_design_flow_ms{num}', label_visibility='hidden', min_value=0.0)
+        else:
+            total_supply_design_flow_ms = 0.0
+    with col4:
         st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-70px;'>Canopy Sections<h4>", unsafe_allow_html=True)
         quantity = st.number_input('.', key=f'quantity{num}', label_visibility='hidden', min_value=0)
 
-    hood = cjHoods(drawingNum, canopyLocation, selection, num, quantity)
+    hood = cjHoods(drawingNum, canopyLocation, selection, num, quantity, total_design_flow_ms, total_supply_design_flow_ms)
 
     # Retrieve system-specific checks
     hood.checklist = checklist(selection, canopyLocation)

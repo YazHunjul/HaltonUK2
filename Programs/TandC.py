@@ -99,6 +99,10 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
             fillBorder(ws, 'A', row)
             iBorder(ws, 'i', row)
             row+=1
+            genFont(ws, 'A', row, f'Total Design Airflow: \t{v.total_design_flow_ms} M³/s')
+            fillBorder(ws, 'A', row)
+            iBorder(ws, 'i', row)
+            row+=1
             genFont(ws, 'A', row, f'Quantity of Canopy Sections: \t{v.quantityOfSections}')
             fillBorder(ws, 'A', row)
             iBorder(ws, 'i', row)
@@ -106,6 +110,10 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
             genFont(ws, 'A', row, f'Calculation: \tQV = Kf x √Pa')
             fillBorder(ws, 'A', row)
             iBorder(ws, 'i', row)
+            row+=1
+            # genFont(ws, 'A', row, f'Design Airflow: \t{v.totalDesignFlow} M³/s')
+            # fillBorder(ws, 'A', row)
+            # iBorder(ws, 'i', row)
             row+=1
             colorFill(ws, row)
             ws.merge_cells(f'A{row}:I{row}')
@@ -115,15 +123,12 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
             #Module Number
             #ws.merge_cells(f'A{row}:B{row}')
             extendRow(ws, row)
-            genFont(ws, 'A', row, 'Module #')
+            genFont(ws, 'A', row, 'Section #')
             makeCenter(ws, 'A', row)
             sectionBorder(ws, row, 1,2)
-            #TAB Point Reading
-            ws.merge_cells(f'B{row}:C{row}')
-            extendRow(ws, row)
             genFont(ws, 'B', row, 'T.A.B Point Reading (Pa)')
             makeCenter(ws, 'B', row)
-            sectionBorder(ws, row, 2,4)
+            sectionBorder(ws, row, 2,3)
             #K-Factor (m3/h)
             ws.merge_cells(f'D{row}:E{row}')
             extendRow(ws, row)
@@ -176,31 +181,33 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
                 totalAchieved+=round(info['achieved'],2)
                 #Design Flow
                 #ws.merge_cells(f'H{row}:I{row}')
-                genFont(ws, 'G', row, f' {info['designFlow']}')
+                genFont(ws, 'G', row, f' {round((info["k_factor"] * math.sqrt(info["tab_reading"])) / 3600, 2)}')
                 makeCenter(ws, 'G', row)
                 sectionBorder(ws, row, 7,8)
-                totalFlowRate += info['designFlow']
+                totalFlowRate += (info["k_factor"] * math.sqrt(info["tab_reading"])) / 3600
                 #Percentage
                 ws.merge_cells(f'H{row}:I{row}')
-                if info['designFlow']:
-                    genFont(ws, 'H', row, f' {round(info['achieved']/info['designFlow'],0)}%')
+                if v.total_design_flow_ms:
+                    actual_flow = round((info["k_factor"] * math.sqrt(info["tab_reading"])) / 3600, 2)
+                    genFont(ws, 'H', row, f' {round((actual_flow/v.total_design_flow_ms) * 100, 0)}%')
                 makeCenter(ws, 'H', row)
                 sectionBorder(ws, row, 8,10)
-                if info['designFlow']:
-                    percentage += round(info['achieved']/info['designFlow'],0)
+                if v.total_design_flow_ms:
+                    percentage += round((actual_flow/v.total_design_flow_ms) * 100, 0)
 
                 row+=1
                 #Total Flow Rate
             colorFill2(ws, row)
             row+=1
             ws.merge_cells(f'A{row}:D{row}')    
-            genFont(ws, 'A', row, f'Total Flowrate                                {totalFlowRate} m3/s')
+            genFont(ws, 'A', row, f'Total Flowrate                                {round(totalFlowRate, 2)} M³/s')
             sectionBorder(ws, row, 1, 5)
             row+=1
             ws.merge_cells(f'A{row}:D{row}')
-            if totalFlowRate:
-                genFont(ws, 'A', row, f'Total Percentage                                {round((totalAchieved/totalFlowRate),0)}%')
+            if v.total_design_flow_ms:
+                genFont(ws, 'A', row, f'Total Percentage                                {round((totalFlowRate/v.total_design_flow_ms * 100),1)}%')
             sectionBorder(ws, row, 1, 5)
+            row+=1
             if v.model in ['KVF', 'KCH-F', 'UVF', 'USR-F', 'KSR-F']:
                 #Supply Air Readings
                 row +=2
@@ -221,29 +228,33 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
                 fillBorder(ws, 'A', row)
                 iBorder(ws, 'i', row)
                 row+=1
+                genFont(ws, 'A', row, f'Total Supply Design Airflow: \t{v.total_supply_design_flow_ms} M³/s')
+                fillBorder(ws, 'A', row)
+                iBorder(ws, 'i', row)
+                row+=1
                 genFont(ws, 'A', row, f'Quantity of Canopy Sections: \t{v.quantityOfSections}')
                 fillBorder(ws, 'A', row)
                 iBorder(ws, 'i', row)
+                
                 row+=1
                 genFont(ws, 'A', row, f'Calculation: \tQV = Kf x √Pa')
                 fillBorder(ws, 'A', row)
                 iBorder(ws, 'i', row)
                 row+=1
+                # genFont(ws, 'G', row, f' {round((info2["supplyKFactor"] * math.sqrt(info2["supplyTab"])) / 3600, 2)} M³/s')
+                # row+=1
                 colorFill(ws, row)
                 ws.merge_cells(f'A{row}:I{row}')
                 genFont(ws, 'A', row, "SUPPLY AIR READINGS")
                 makeCenter(ws, 'A', row)
                 row+=1
                 extendRow(ws, row)
-                genFont(ws, 'A', row, 'Module #')
+                genFont(ws, 'A', row, 'Section #')
                 makeCenter(ws, 'A', row)
                 sectionBorder(ws, row, 1,2)
-                #TAB Point Reading
-                ws.merge_cells(f'B{row}:C{row}')
-                extendRow(ws, row)
                 genFont(ws, 'B', row, 'T.A.B Point Reading (Pa)')
                 makeCenter(ws, 'B', row)
-                sectionBorder(ws, row, 2,4)
+                sectionBorder(ws, row, 2,3)
                 #K-Factor (m3/h)
                 ws.merge_cells(f'D{row}:E{row}')
                 extendRow(ws, row)
@@ -292,18 +303,19 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
                     sectionBorder(ws, row, 6, 7)
                     #Design Flow
                     
-                    genFont(ws, 'G', row, f' {info2['supplyDesign']}')
+                    genFont(ws, 'G', row, f' {round((info2["supplyKFactor"] * math.sqrt(info2["supplyTab"])) / 3600, 2)}')
                     makeCenter(ws, 'G', row)
                     sectionBorder(ws, row, 7, 8)
-                    totalFlowRateSup += info2['supplyDesign']
-                    #Percentage
+                    totalFlowRateSup += round((info2["supplyKFactor"] * math.sqrt(info2["supplyTab"])) / 3600, 2)
+                    #Percentage for Supply
                     ws.merge_cells(f'H{row}:I{row}')
-                    if info2['supplyDesign']:
-                        genFont(ws, 'H', row, f' {round(info2['achievedSupply']/info2['supplyDesign'], 0)}%')
+                    if v.total_supply_design_flow_ms:
+                        actual_flow_supply_ms = round((info2["supplyKFactor"] * math.sqrt(info2["supplyTab"])) / 3600, 2)
+                        genFont(ws, 'H', row, f' {round((actual_flow_supply_ms/v.total_supply_design_flow_ms * 100), 0)}%')
                     makeCenter(ws, 'H', row)
-                    sectionBorder(ws, row, 8, 10)
-                    if info2['supplyDesign']:
-                        totPercentage += round(info2['achievedSupply']/info2['supplyDesign'], 0)
+                    sectionBorder(ws, row, 8,10)
+                    if v.total_supply_design_flow_ms:
+                        totPercentage += round((actual_flow_supply_ms/v.total_supply_design_flow_ms * 100), 0)
                     row+=1
                 colorFill2(ws, row)
                 row+=1
@@ -427,18 +439,25 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
         # Process Extract Air sections
         if hood.model in ['KVF', 'KVI', 'KCH-F', 'KCH-I', 'KSR-S', 'KSR-F', 'KSR-M', 'UVF', 'UVI', 'USR-S', 'USR-F', 'USR-M']:
             for section_data in hood.sections.values():
-                extract_design_total += section_data['designFlow']
-                extract_actual_total += section_data['achieved']
+                extract_design_total = hood.total_design_flow_ms  # Use the total extract design flow
+                extract_actual_total += round((section_data["k_factor"] * math.sqrt(section_data["tab_reading"])) / 3600, 2)
+
+            # Calculate percentage using total values
+            if extract_design_total > 0:
+                extract_percentage = round((extract_actual_total / extract_design_total) * 100, 1)
 
         # Process Supply Air sections if applicable
         if hood.model in ['KVF', 'KCH-F', 'UVF', 'USR-F', 'KSR-F', 'KWF', 'UWF', 'CMW-FMOD']:
             for section_data in hood.sections.values():
-                supply_design_total += section_data['supplyDesign']
-                supply_actual_total += section_data['achievedSupply']
+                supply_design_total = hood.total_supply_design_flow_ms  # Use the total design flow for whole canopy
+                supply_actual_total += round((section_data["supplyKFactor"] * math.sqrt(section_data["supplyTab"])) / 3600, 2)
+
+            # Calculate percentage using total values
+            if supply_design_total > 0:
+                supply_percentage = round((supply_actual_total / supply_design_total) * 100, 1)
 
         # Calculate percentage and store results for each drawing
         if extract_design_total > 0:
-            extract_percentage = round((extract_actual_total / extract_design_total) * 100, 1)
             extract_summary.append({
                 "drawing_number": drawing_number,
                 "design_flow_rate_total": extract_design_total,
@@ -449,7 +468,6 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
             total_extract_actual += extract_actual_total
 
         if supply_design_total > 0:
-            supply_percentage = round((supply_actual_total / supply_design_total) * 100, 1)
             supply_summary.append({
                 "drawing_number": drawing_number,
                 "design_flow_rate_total": supply_design_total,
