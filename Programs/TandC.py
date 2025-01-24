@@ -84,10 +84,10 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
             ws.row_dimensions[row].height = 20
             ws.merge_cells(f'A{row}:I{row}')
             colorFill(ws, row)  # Apply the fill and border to the entire range
-            genFont(ws, 'A', row, "EXTRACT AIR DATA")
+            genFont(ws, 'A', row, "EXTRACT AIR DATA", "FFFFFF")
             makeCenter(ws, 'A', row)
             row+=1
-            genFont(ws, 'A', row,f'Drawing Number: {genInfo.get('project_number', 'Unknown')}-{v.drawingNum}')
+            genFont(ws, 'A', row,f'Drawing Number: {v.drawingNum}')
             fillBorder(ws, 'A', row)
             iBorder(ws, 'i', row)
             row+=1
@@ -99,7 +99,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
             fillBorder(ws, 'A', row)
             iBorder(ws, 'i', row)
             row+=1
-            genFont(ws, 'A', row, f'Total Design Airflow: \t{v.total_design_flow_ms} M³/s')
+            genFont(ws, 'A', row, f'Total Design Airflow: \t{v.total_design_flow_ms} m³/s')
             fillBorder(ws, 'A', row)
             iBorder(ws, 'i', row)
             row+=1
@@ -110,14 +110,13 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
             genFont(ws, 'A', row, f'Calculation: \tQV = Kf x √Pa')
             fillBorder(ws, 'A', row)
             iBorder(ws, 'i', row)
-            row+=1
             # genFont(ws, 'A', row, f'Design Airflow: \t{v.totalDesignFlow} M³/s')
             # fillBorder(ws, 'A', row)
             # iBorder(ws, 'i', row)
             row+=1
             colorFill(ws, row)
             ws.merge_cells(f'A{row}:I{row}')
-            genFont(ws, 'A', row, "EXTRACT AIR READINGS")
+            genFont(ws, 'A', row, "EXTRACT AIR READINGS", "FFFFFF")
             makeCenter(ws, 'A', row)
             row+=1
             #Module Number
@@ -126,25 +125,26 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
             genFont(ws, 'A', row, 'Section #')
             makeCenter(ws, 'A', row)
             sectionBorder(ws, row, 1,2)
+
+            ws.merge_cells(f'B{row}:C{row}')
             genFont(ws, 'B', row, 'T.A.B Point Reading (Pa)')
             makeCenter(ws, 'B', row)
-            sectionBorder(ws, row, 2,3)
-            #K-Factor (m3/h)
+            sectionBorder(ws, row, 2,4)
+
             ws.merge_cells(f'D{row}:E{row}')
-            extendRow(ws, row)
-            genFont(ws, 'D', row, 'K-Factor (m3 /h)')
+            genFont(ws, 'D', row, 'K-Factor (m³/h)')
             makeCenter(ws, 'D', row)
             sectionBorder(ws, row, 4,6)
+            
             #Achieved Flowrate
-            #ws.merge_cells(f'F{row}:G{row}')
             extendRow(ws, row)
-            genFont(ws, 'F', row, 'Flowrate (m3 /h)')
+            genFont(ws, 'F', row, 'Flowrate (m³/h)')
             makeCenter(ws, 'F', row)
             sectionBorder(ws, row, 6,7)
             #Design Flowrate
             #ws.merge_cells(f'H{row}:I{row}')
             extendRow(ws, row)
-            genFont(ws, 'G', row, 'Flowrate (m3 /s)')
+            genFont(ws, 'G', row, 'Flowrate (m³/s)')
             makeCenter(ws, 'G', row)
             sectionBorder(ws, row, 7,8)
             #Percentage
@@ -165,7 +165,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
                 sectionBorder(ws, row, 1,2)
                 #Tab Reading
                 ws.merge_cells(f'B{row}:C{row}')
-                genFont(ws, 'B', row, f' {info['tab_reading']} pa')
+                genFont(ws, 'B', row, f' {round(info['tab_reading'], 0)} Pa',)
                 makeCenter(ws, 'B', row)
                 sectionBorder(ws, row, 2, 4)
                 #K-Factor
@@ -175,7 +175,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
                 sectionBorder(ws, row, 4, 6)
                 #AchievedFlow
                 #ws.merge_cells(f'F{row}:G{row}')
-                genFont(ws, 'F', row, f' {round(info['achieved'],2)}')
+                genFont(ws, 'F', row, f' {round(info['achieved'],0)}')
                 makeCenter(ws, 'F', row)
                 sectionBorder(ws, row, 6, 7)
                 totalAchieved+=round(info['achieved'],2)
@@ -200,7 +200,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
             colorFill2(ws, row)
             row+=1
             ws.merge_cells(f'A{row}:D{row}')    
-            genFont(ws, 'A', row, f'Total Flowrate                                {round(totalFlowRate, 2)} M³/s')
+            genFont(ws, 'A', row, f'Total Flowrate                                {round(totalFlowRate, 2)} m³/s')
             sectionBorder(ws, row, 1, 5)
             row+=1
             ws.merge_cells(f'A{row}:D{row}')
@@ -213,10 +213,10 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
                 row +=2
                 colorFill(ws, row)
                 ws.merge_cells(f'A{row}:I{row}')
-                genFont(ws, 'A', row, "SUPPLY AIR DATA")
+                genFont(ws, 'A', row, "SUPPLY AIR DATA", "FFFFFF")
                 makeCenter(ws, 'A', row)
                 row+=1
-                genFont(ws, 'A', row,f"{genInfo.get('project_number', 'Unknown')}-{v.drawingNum}")
+                genFont(ws, 'A', row,f"Drawing Number: {v.drawingNum}")
                 fillBorder(ws, 'A', row)
                 iBorder(ws, 'i', row)
                 row+=1
@@ -228,7 +228,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
                 fillBorder(ws, 'A', row)
                 iBorder(ws, 'i', row)
                 row+=1
-                genFont(ws, 'A', row, f'Total Supply Design Airflow: \t{v.total_supply_design_flow_ms} M³/s')
+                genFont(ws, 'A', row, f'Total Supply Design Airflow: \t{v.total_supply_design_flow_ms} m³/s')
                 fillBorder(ws, 'A', row)
                 iBorder(ws, 'i', row)
                 row+=1
@@ -245,31 +245,33 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
                 # row+=1
                 colorFill(ws, row)
                 ws.merge_cells(f'A{row}:I{row}')
-                genFont(ws, 'A', row, "SUPPLY AIR READINGS")
+                genFont(ws, 'A', row, "SUPPLY AIR READINGS", "FFFFFF")
                 makeCenter(ws, 'A', row)
                 row+=1
                 extendRow(ws, row)
                 genFont(ws, 'A', row, 'Section #')
                 makeCenter(ws, 'A', row)
                 sectionBorder(ws, row, 1,2)
+                
+                ws.merge_cells(f'B{row}:C{row}')
                 genFont(ws, 'B', row, 'T.A.B Point Reading (Pa)')
                 makeCenter(ws, 'B', row)
-                sectionBorder(ws, row, 2,3)
+                sectionBorder(ws, row, 2,4)
                 #K-Factor (m3/h)
                 ws.merge_cells(f'D{row}:E{row}')
                 extendRow(ws, row)
-                genFont(ws, 'D', row, 'K-Factor (m3 /h)')
+                genFont(ws, 'D', row, 'K-Factor (m³/h)')
                 makeCenter(ws, 'D', row)
                 sectionBorder(ws, row, 4,6)
                 #Achieved Flowrate
                 #ws.merge_cells(f'F{row}:G{row}')
                 extendRow(ws, row)
-                genFont(ws, 'F', row, 'Flowrate (m3 /h)')
+                genFont(ws, 'F', row, 'Flowrate (m³/h)')
                 makeCenter(ws, 'F', row)
                 sectionBorder(ws, row, 6,7)
                 #Design Flowrate
                 extendRow(ws, row)
-                genFont(ws, 'G', row, 'Flowrate (m3 /s)')
+                genFont(ws, 'G', row, 'Flowrate (m³/s)')
                 makeCenter(ws, 'G', row)
                 sectionBorder(ws, row, 7,8)
                 #Percentage
@@ -288,7 +290,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
                     sectionBorder(ws, row, 1,2)
                     #Tab Reading
                     ws.merge_cells(f'B{row}:C{row}')
-                    genFont(ws, 'B', row, f' {info2['supplyTab']} pa')
+                    genFont(ws, 'B', row, f' {round(info2['supplyTab'], 0)} Pa')
                     makeCenter(ws, 'B', row)
                     sectionBorder(ws, row, 2, 4)
                     #K-Factor
@@ -320,7 +322,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
                 colorFill2(ws, row)
                 row+=1
                 ws.merge_cells(f'A{row}:D{row}')    
-                genFont(ws, 'A', row, f'Total Flowrate                                {totalFlowRateSup} m3/s')
+                genFont(ws, 'A', row, f'Total Flowrate                                {totalFlowRateSup} m³/s')
                 sectionBorder(ws, row, 1, 5)
                 row+=1
                 ws.merge_cells(f'A{row}:D{row}')    
@@ -428,7 +430,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
 
     # Iterate over each canopy to process both Extract and Supply Air
     for canopy_num, hood in hoods.items():
-        drawing_number = f"{genInfo.get('project_number', 'Unknown')}-{hood.drawingNum}"  # Format the drawing number
+        drawing_number = f"{hood.drawingNum}"  # Format the drawing number
 
         # Initialize per-drawing totals
         extract_design_total = 0
@@ -485,40 +487,58 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
 
     # Header for Extract Air Summary Table
     ws.merge_cells('A{0}:B{0}'.format(row))
-    genFont(ws, 'A', row, "Drawing Number")
+    genFont(ws, 'A', row, "Drawing Number", "FFFFFF")
     ws.merge_cells('C{0}:D{0}'.format(row))
-    genFont(ws, 'C', row, "Design Flow Rate (m³/s)")
+    genFont(ws, 'C', row, "Design Flow Rate (m³/s)", "FFFFFF")
     ws.merge_cells('E{0}:F{0}'.format(row))
-    genFont(ws, 'E', row, "Actual Flowrate (m³/s)")
-    ws.merge_cells('G{0}:H{0}'.format(row))
-    genFont(ws, 'G', row, "Percentage of Design")
-    sectionBorder(ws, row, 1, 9)
-    row += 1
+    genFont(ws, 'E', row, "Actual Flowrate (m³/s)", "FFFFFF")
+    ws.merge_cells('G{0}:I{0}'.format(row))
+    genFont(ws, 'G', row, "Percentage of Design", "FFFFFF")
+    sectionBorder(ws, row, 1, 10)
+    colorFill(ws, row)
+    
+    row+=1
 
     # Populate Extract Air Summary Table
     for result in extract_summary:
         ws.merge_cells('A{0}:B{0}'.format(row))
         genFont(ws, 'A', row, result["drawing_number"])
+        makeCenter(ws, 'A', row)
+        
         ws.merge_cells('C{0}:D{0}'.format(row))
-        genFont(ws, 'C', row, f"{result['design_flow_rate_total']}")
+        genFont(ws, 'C', row, f"{result['design_flow_rate_total']} m³/s")
+        makeCenter(ws, 'C', row)
+        
         ws.merge_cells('E{0}:F{0}'.format(row))
-        genFont(ws, 'E', row, f"{result['actual_flow_rate_total']}")
-        ws.merge_cells('G{0}:H{0}'.format(row))
+        genFont(ws, 'E', row, f"{result['actual_flow_rate_total']} m³/s")
+        makeCenter(ws, 'E', row)
+        
+        ws.merge_cells('G{0}:I{0}'.format(row))
         genFont(ws, 'G', row, f"{result['percentage']}%")
-        sectionBorder(ws, row, 1, 9)
+        makeCenter(ws, 'G', row)
+        
+        sectionBorder(ws, row, 1, 10)
         row += 1
 
     # Totals row for Extract Air Summary
     ws.merge_cells('A{0}:B{0}'.format(row))
     genFont(ws, 'A', row, "TOTAL")
+    makeCenter(ws, 'A', row)
+    
     ws.merge_cells('C{0}:D{0}'.format(row))
-    genFont(ws, 'C', row, f"{total_extract_design}")
+    genFont(ws, 'C', row, f"{total_extract_design} m³/s")
+    makeCenter(ws, 'C', row)
+    
     ws.merge_cells('E{0}:F{0}'.format(row))
-    genFont(ws, 'E', row, f"{total_extract_actual}")
-    ws.merge_cells('G{0}:H{0}'.format(row))
+    genFont(ws, 'E', row, f"{total_extract_actual} m³/s")
+    makeCenter(ws, 'E', row)
+    
+    ws.merge_cells('G{0}:I{0}'.format(row))
     overall_extract_percentage = round((total_extract_actual / total_extract_design) * 100, 1) if total_extract_design > 0 else 0
     genFont(ws, 'G', row, f"{overall_extract_percentage}%")
-    sectionBorder(ws, row, 1, 9)
+    makeCenter(ws, 'G', row)
+    
+    sectionBorder(ws, row, 1, 10)
     row += 3
 
     # Display Results Summary for Supply Air
@@ -528,40 +548,60 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
 
     # Header for Supply Air Summary Table
     ws.merge_cells('A{0}:B{0}'.format(row))
-    genFont(ws, 'A', row, "Drawing Number")
+    genFont(ws, 'A', row, "Drawing Number", "FFFFFF")
+    
     ws.merge_cells('C{0}:D{0}'.format(row))
-    genFont(ws, 'C', row, "Design Flow Rate (m³/s)")
+    genFont(ws, 'C', row, "Design Flow Rate (m³/s)", "FFFFFF")
+    
     ws.merge_cells('E{0}:F{0}'.format(row))
-    genFont(ws, 'E', row, "Actual Flowrate (m³/s)")
-    ws.merge_cells('G{0}:H{0}'.format(row))
-    genFont(ws, 'G', row, "Percentage of Design")
-    sectionBorder(ws, row, 1, 9)
+    genFont(ws, 'E', row, "Actual Flowrate (m³/s)", "FFFFFF")
+    
+    ws.merge_cells('G{0}:I{0}'.format(row))
+    genFont(ws, 'G', row, "Percentage of Design", "FFFFFF")
+    
+    sectionBorder(ws, row, 1, 10)
     row += 1
 
     # Populate Supply Air Summary Table
     for result in supply_summary:
         ws.merge_cells('A{0}:B{0}'.format(row))
         genFont(ws, 'A', row, result["drawing_number"])
+        makeCenter(ws, 'A', row)
+        
         ws.merge_cells('C{0}:D{0}'.format(row))
         genFont(ws, 'C', row, f"{result['design_flow_rate_total']}")
+        makeCenter(ws, 'C', row)
+        
         ws.merge_cells('E{0}:F{0}'.format(row))
         genFont(ws, 'E', row, f"{result['actual_flow_rate_total']}")
-        ws.merge_cells('G{0}:H{0}'.format(row))
+        makeCenter(ws, 'E', row)
+        
+        ws.merge_cells('G{0}:I{0}'.format(row))
         genFont(ws, 'G', row, f"{result['percentage']}%")
-        sectionBorder(ws, row, 1, 9)
+        makeCenter(ws, 'G', row)
+        
+        sectionBorder(ws, row, 1, 10)
         row += 1
 
-    # Totals row for Supply Air Summary
+    # Totals row
     ws.merge_cells('A{0}:B{0}'.format(row))
     genFont(ws, 'A', row, "TOTAL")
+    makeCenter(ws, 'A', row)
+    
     ws.merge_cells('C{0}:D{0}'.format(row))
     genFont(ws, 'C', row, f"{total_supply_design}")
+    makeCenter(ws, 'C', row)
+    
     ws.merge_cells('E{0}:F{0}'.format(row))
     genFont(ws, 'E', row, f"{total_supply_actual}")
-    ws.merge_cells('G{0}:H{0}'.format(row))
+    makeCenter(ws, 'E', row)
+    
+    ws.merge_cells('G{0}:I{0}'.format(row))
     overall_supply_percentage = round((total_supply_actual / total_supply_design) * 100, 1) if total_supply_design > 0 else 0
     genFont(ws, 'G', row, f"{overall_supply_percentage}%")
-    sectionBorder(ws, row, 1, 9)
+    makeCenter(ws, 'G', row)
+    
+    sectionBorder(ws, row, 1, 10)
     
     if edge_box_details:
     # Add header row with blue fill
@@ -602,7 +642,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
     row+=5
     colorFill(ws, row)
     ws.merge_cells('A{0}:I{0}'.format(row))
-    genFont(ws, 'A', row, f'ADDITIONAL NOTES')
+    genFont(ws, 'A', row, f'ADDITIONAL NOTES', "FFFFFF")
     row+=1
     for comment in comments:
         ws[f'A{row}'] = comment
@@ -684,9 +724,9 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
 def iBorder(ws, letter, row):
     ws[f'i{row}'].border = Border(right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
     ws[f'A{row}'].border = Border(left=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
-def genFont(ws, letter, row, word):
-    ws[f'{letter}{row}'] = word
-    ws[f'{letter}{row}'].font = Font(size=11, bold=True)
+def genFont(ws, col, row, text, color="000000"):  # Added color parameter with default black
+    ws[f'{col}{row}'] = text
+    ws[f'{col}{row}'].font = Font(name='Calibri', size=11, color=color)
 def extendRow(ws, row):
     ws.row_dimensions[row].height = 30
 def makeCenter(ws, letter, row):
@@ -768,3 +808,19 @@ def applyMulishFont(ws):
         for cell in row:
             if cell.value:  # Apply font only if the cell contains content
                 cell.font = mulish_font
+
+            print("Current row:", row)
+            print("Merged cells before clearing:", [str(r) for r in ws.merged_cells.ranges])
+            
+            # Clear any existing merges in this row
+            for merge_range in ws.merged_cells.ranges.copy():
+                if row in range(merge_range.min_row, merge_range.max_row + 1):
+                    print(f"Unmerging: {str(merge_range)}")
+                    ws.unmerge_cells(str(merge_range))
+            
+            print("Attempting to merge G to I:", f"G{row}:I{row}")
+            ws.merge_cells(f'G{row}:I{row}')
+            print("Merged cells after operation:", [str(r) for r in ws.merged_cells.ranges])
+            
+            genFont(ws, 'G', row, 'Percentage of Design', "FFFFFF")
+            makeCenter(ws, 'G', row)
