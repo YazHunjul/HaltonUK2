@@ -611,7 +611,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
         colorFill(ws, row)  # Blue background
         ws.merge_cells(f'A{row}:G{row}')
         ws.merge_cells(f'H{row}:I{row}')
-        genFont(ws, 'A', row, "EDGE BOX")
+        genFont(ws, 'A', row, "EDGE BOX", "FFFFFF")
         makeCenter(ws, 'A', row)
 
         # Add Edge Box parameters
