@@ -303,7 +303,7 @@ def createCJHood(selection, num):
         
         # Only show supply design flow for supply-capable hoods
         if selection in ['KVF', 'KCH-F', 'UVF', 'USR-F', 'KSR-F', 'KWF', 'UWF', 'CMW-FMOD']:
-            st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-70px;'>Supply Design Airflow m³/s)<h4>", unsafe_allow_html=True)
+            st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-70px;'>Supply Design Airflow (m³/s)<h4>", unsafe_allow_html=True)
             total_supply_design_flow_ms = st.number_input('.', key=f'total_supply_design_flow_ms{num}', label_visibility='hidden', min_value=0.0)
         else:
             total_supply_design_flow_ms = 0.0
