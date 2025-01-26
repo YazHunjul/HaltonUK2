@@ -158,7 +158,7 @@ class cjHoods():
                     "ksaQuantity": self.ksaQuantity,
                     "k_factor": self.k_factor,
                     'tab_reading': self.tab_Reading,
-                    'designFlow': self.design_flow,
+                    # 'designFlow': self.design_flow,
                     'achieved': round(achievedFlowRate, 2)
                 }
 

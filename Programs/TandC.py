@@ -526,16 +526,16 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
     makeCenter(ws, 'A', row)
     
     ws.merge_cells('C{0}:D{0}'.format(row))
-    genFont(ws, 'C', row, f"{total_extract_design} m³/s")
+    genFont(ws, 'C', row, f"{total_extract_design}")
     makeCenter(ws, 'C', row)
     
     ws.merge_cells('E{0}:F{0}'.format(row))
-    genFont(ws, 'E', row, f"{total_extract_actual} m³/s")
+    genFont(ws, 'E', row, f"{total_extract_actual}")
     makeCenter(ws, 'E', row)
     
     ws.merge_cells('G{0}:I{0}'.format(row))
     overall_extract_percentage = round((total_extract_actual / total_extract_design) * 100, 1) if total_extract_design > 0 else 0
-    genFont(ws, 'G', row, f"{overall_extract_percentage}%")
+    genFont(ws, 'G', row, f"{round(overall_extract_percentage, 1)}%")
     makeCenter(ws, 'G', row)
     
     sectionBorder(ws, row, 1, 10)
