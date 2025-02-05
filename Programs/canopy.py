@@ -248,42 +248,37 @@ def checklist(hood, location, drawingNum):
             }
 
     # M.A.R.V.E.L. System Checklist (available for all hoods)
-    try:
-        with_marvel = st.checkbox(f"{(hood.split(' '))[0]} ({location}) With M.A.R.V.E.L. System?", key=f"marvel_{hood}_{location}_{drawingNum}")
-        with_marvel = st.checkbox(f"{(hood.split(' '))[0]} ({location}) With M.A.R.V.E.L. System?", key=f"marvel_{hood}_{location}")
-        if with_marvel:
-            features["marvel"] = True
-            st.write("M.A.R.V.E.L. System Checklist")
-            col1, col2 = st.columns(2)
-            with col1:
-                min_airflow = st.number_input("Canopy 'Minimum' Air Flow Set Point % of Design", min_value=0, key=f'minAirflow_marvel_{hood}_{location}')
-                idle_airflow = st.number_input("Canopy 'Idle' Air Flow Set % Of Design", min_value=0, key=f'idleAirflow_marvel_{hood}_{location}')
-                cook_airflow = st.number_input("Canopy 'Cook' Air Flow Set % Of Design", min_value=0, key=f'cookAirflow_marvel_{hood}_{location}')
-                cook_time = st.number_input("Cook Mode Run Time (Seconds)", min_value=0, key=f'cookTime_marvel_{hood}_{location}')
-                override_temp = st.number_input("M.A.R.V.E.L. System Override Temp Setpoint (°C)", min_value=0, key=f'overrideTemp_marvel_{hood}_{location}')
-            with col2:
-                marvel_min = st.checkbox("M.A.R.V.E.L. System Tested in 'Minimum' Mode", value=True, key=f'marvelMin_marvel_{hood}_{location}')
-                marvel_idle = st.checkbox("M.A.R.V.E.L. System Tested in 'Idle' Mode", value=True, key=f'marvelIdle_marvel_{hood}_{location}')
-                marvel_cook = st.checkbox("M.A.R.V.E.L. System Tested in 'Cook' Mode", value=True, key=f'marvelCook_marvel_{hood}_{location}')
-                lir_2_test = st.checkbox("Testing of Canopy LIR-2 Sensors Successful", value=True, key=f'lir2_marvel_{hood}_{location}')
-                hmi_override = st.checkbox("Override Test on Halton HMI Successful", value=True, key=f'hmiOverride_marvel_{hood}_{location}')
-                auto_balance = st.checkbox("Auto-Balance of M.A.R.V.E.L. System Successful", value=True, key=f'autoBalance_marvel_{hood}_{location}')
-            system_checks['M.A.R.V.E.L. System'] = {
-                "Canopy 'Minimum' Air Flow Set Point % of Design": min_airflow,
-                "Canopy 'Idle' Air Flow Set % Of Design": idle_airflow,
-                "Canopy 'Cook' Air Flow Set % Of Design": cook_airflow,
-                "M.A.R.V.E.L. System Tested in 'Minimum' Mode": marvel_min,
-                "M.A.R.V.E.L. System Tested in 'Idle' Mode": marvel_idle,
-                "M.A.R.V.E.L. System Tested in 'Cook' Mode": marvel_cook,
-                "Cook Mode Run Time (Seconds)": cook_time,
-                "Testing of Canopy LIR-2 Sensors Successful": lir_2_test,
-                "M.A.R.V.E.L. System Override Temp Setpoint (°C)": override_temp,
-                "Override Test on Halton HMI Successful": hmi_override,
-                "Auto-Balance of M.A.R.V.E.L. System Successful": auto_balance,
-            }
-            
-    except:
-        st.error("Drawing Number Must be Unique")
+    with_marvel = st.checkbox(f"{(hood.split(' '))[0]} ({location}) With M.A.R.V.E.L. System?", key=f"marvel_{hood}_{location}_{drawingNum}")
+    if with_marvel:
+        features["marvel"] = True
+        st.write("M.A.R.V.E.L. System Checklist")
+        col1, col2 = st.columns(2)
+        with col1:
+            min_airflow = st.number_input("Canopy 'Minimum' Air Flow Set Point % of Design", min_value=0, key=f'minAirflow_marvel_{hood}_{location}')
+            idle_airflow = st.number_input("Canopy 'Idle' Air Flow Set % Of Design", min_value=0, key=f'idleAirflow_marvel_{hood}_{location}')
+            cook_airflow = st.number_input("Canopy 'Cook' Air Flow Set % Of Design", min_value=0, key=f'cookAirflow_marvel_{hood}_{location}')
+            cook_time = st.number_input("Cook Mode Run Time (Seconds)", min_value=0, key=f'cookTime_marvel_{hood}_{location}')
+            override_temp = st.number_input("M.A.R.V.E.L. System Override Temp Setpoint (°C)", min_value=0, key=f'overrideTemp_marvel_{hood}_{location}')
+        with col2:
+            marvel_min = st.checkbox("M.A.R.V.E.L. System Tested in 'Minimum' Mode", value=True, key=f'marvelMin_marvel_{hood}_{location}')
+            marvel_idle = st.checkbox("M.A.R.V.E.L. System Tested in 'Idle' Mode", value=True, key=f'marvelIdle_marvel_{hood}_{location}')
+            marvel_cook = st.checkbox("M.A.R.V.E.L. System Tested in 'Cook' Mode", value=True, key=f'marvelCook_marvel_{hood}_{location}')
+            lir_2_test = st.checkbox("Testing of Canopy LIR-2 Sensors Successful", value=True, key=f'lir2_marvel_{hood}_{location}')
+            hmi_override = st.checkbox("Override Test on Halton HMI Successful", value=True, key=f'hmiOverride_marvel_{hood}_{location}')
+            auto_balance = st.checkbox("Auto-Balance of M.A.R.V.E.L. System Successful", value=True, key=f'autoBalance_marvel_{hood}_{location}')
+        system_checks['M.A.R.V.E.L. System'] = {
+            "Canopy 'Minimum' Air Flow Set Point % of Design": min_airflow,
+            "Canopy 'Idle' Air Flow Set % Of Design": idle_airflow,
+            "Canopy 'Cook' Air Flow Set % Of Design": cook_airflow,
+            "M.A.R.V.E.L. System Tested in 'Minimum' Mode": marvel_min,
+            "M.A.R.V.E.L. System Tested in 'Idle' Mode": marvel_idle,
+            "M.A.R.V.E.L. System Tested in 'Cook' Mode": marvel_cook,
+            "Cook Mode Run Time (Seconds)": cook_time,
+            "Testing of Canopy LIR-2 Sensors Successful": lir_2_test,
+            "M.A.R.V.E.L. System Override Temp Setpoint (°C)": override_temp,
+            "Override Test on Halton HMI Successful": hmi_override,
+            "Auto-Balance of M.A.R.V.E.L. System Successful": auto_balance,
+        }
 
     return system_checks
 
@@ -296,6 +291,11 @@ def createCJHood(selection, num):
     """
     st.markdown(f"<h3 style='text-align: center;margin-top: 30px;margin-bottom:-70px;'>{selection} Info<h3>", unsafe_allow_html=True)
     col1, col2, col3, col4 = st.columns(4)
+    
+    # Keep track of used drawing numbers
+    if 'used_drawing_numbers' not in st.session_state:
+        st.session_state.used_drawing_numbers = set()
+
     with col1:
         st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-70px;'>Drawing Number<h4>", unsafe_allow_html=True)
         drawingNum = st.text_input('.', key=f'drawNum{num}', label_visibility='hidden')

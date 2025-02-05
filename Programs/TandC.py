@@ -463,7 +463,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
             extract_summary.append({
                 "drawing_number": drawing_number,
                 "design_flow_rate_total": extract_design_total,
-                "actual_flow_rate_total": extract_actual_total,
+                "actual_flow_rate_total": round(extract_actual_total, 2),
                 "percentage": extract_percentage
             })
             total_extract_design += extract_design_total
@@ -473,7 +473,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
             supply_summary.append({
                 "drawing_number": drawing_number,
                 "design_flow_rate_total": supply_design_total,
-                "actual_flow_rate_total": supply_actual_total,
+                "actual_flow_rate_total": round(supply_actual_total, 2),
                 "percentage": supply_percentage
             })
             total_supply_design += supply_design_total
@@ -506,11 +506,11 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
         makeCenter(ws, 'A', row)
         
         ws.merge_cells('C{0}:D{0}'.format(row))
-        genFont(ws, 'C', row, f"{result['design_flow_rate_total']} m³/s")
+        genFont(ws, 'C', row, f"{result['design_flow_rate_total']} ")
         makeCenter(ws, 'C', row)
         
         ws.merge_cells('E{0}:F{0}'.format(row))
-        genFont(ws, 'E', row, f"{result['actual_flow_rate_total']} m³/s")
+        genFont(ws, 'E', row, f"{result['actual_flow_rate_total']}")
         makeCenter(ws, 'E', row)
         
         ws.merge_cells('G{0}:I{0}'.format(row))
