@@ -209,7 +209,7 @@ def display_shareable_link():
     # Add a URL input field to let users specify their base URL
     base_url = st.text_input(
         "Your app's URL (where this form is hosted):",
-        value="http://localhost:8501",
+        value="https://haltonservice-uk.streamlit.app/",
         key="base_url",
         help="Enter the URL where your app is hosted. For local development, use http://localhost:8501"
     )
