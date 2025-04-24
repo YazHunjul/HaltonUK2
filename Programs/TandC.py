@@ -41,10 +41,15 @@ def TandC():
     # Update sidebar with canopy links after we have the hood data
     with st.sidebar:
         for key, hood in hoods.items():
+            # Extract the number from the key since hood.id might not exist
+            # Key format is '{selection} {num}'
+            hood_num = key.split()[-1]  # Get the last part which should be the number
+            
             # Create unique anchor ID for each canopy
-            anchor_id = f"canopy_{hood.id}"
+            anchor_id = f"canopy_{hood_num}"
+            
             # Format the link to show model (drawing number) - location
-            drawing_info = hood.drawingNum if hood.drawingNum else f"#{hood.id+1}"
+            drawing_info = hood.drawingNum if hood.drawingNum else f"#{int(hood_num)+1}"
             st.markdown(f'[{hood.model} ({drawing_info}) - {hood.location}](#{anchor_id})', unsafe_allow_html=True)
         
         # Add links to other sections
@@ -769,7 +774,6 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
         
         ws.merge_cells('E{0}:F{0}'.format(row))
         genFont(ws, 'E', row, f"{round(result['actual_flow_rate_total'], 2)}")
-        st.write(result['actual_flow_rate_total'])
         makeCenter(ws, 'E', row)
         
         ws.merge_cells('G{0}:I{0}'.format(row))
