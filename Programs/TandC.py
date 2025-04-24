@@ -12,13 +12,74 @@ from openpyxl.styles import Font
 
 def TandC():
     GI.titleAndLogo("Testing And Commissioning")
+    
+    # Only load URL parameters once per session
+    if 'url_params_loaded' not in st.session_state:
+        try:
+            GI.load_from_query_params()
+            # Mark that we've loaded the URL parameters
+            st.session_state['url_params_loaded'] = True
+        except Exception as e:
+            st.error(f"Error loading form data: {e}")
+    
     genInfo = GI.getGenInfo()
+    
+    # Create sidebar for navigation
+    with st.sidebar:
+        st.header("Navigation")
+        st.markdown("#### Jump to canopy:")
+        
+        # Create anchor for top of page
+        st.markdown('<a name="top"></a>', unsafe_allow_html=True)
+        
+        # Add link to top of page
+        st.markdown('[General Information](#top)', unsafe_allow_html=True)
+    
+    # Continue with the main form elements
     hoods, edge_box_details = canopy.numCanopies()  # Unpack returned values
+    
+    # Update sidebar with canopy links after we have the hood data
+    with st.sidebar:
+        for key, hood in hoods.items():
+            # Create unique anchor ID for each canopy
+            anchor_id = f"canopy_{hood.id}"
+            # Format the link to show model (drawing number) - location
+            drawing_info = hood.drawingNum if hood.drawingNum else f"#{hood.id+1}"
+            st.markdown(f'[{hood.model} ({drawing_info}) - {hood.location}](#{anchor_id})', unsafe_allow_html=True)
+        
+        # Add links to other sections
+        st.markdown("#### Other Sections:")
+        st.markdown('[Comments](#comments)', unsafe_allow_html=True)
+        st.markdown('[Signature](#signature)', unsafe_allow_html=True)
+    
+    # Get comments BEFORE signature
+    st.markdown('<a name="comments"></a>', unsafe_allow_html=True)
+    st.markdown("### Comments")
     comments = GI.get_comments()
+    
+    # Store the signature data to prevent it from disappearing on re-renders
+    if 'signature_data' not in st.session_state:
+        st.session_state.signature_data = None
+    
+    # Get the signature input AFTER comments
+    st.markdown('<a name="signature"></a>', unsafe_allow_html=True)
+    st.markdown("### Signature")
     sign = GI.get_sign()
-
-    if st.button("Save to Excel"):
-        saveToExcel(genInfo, hoods, comments, sign, edge_box_details)
+    if sign.image_data is not None:
+        st.session_state.signature_data = sign.image_data
+    elif st.session_state.signature_data is not None:
+        sign.image_data = st.session_state.signature_data
+    
+    # Add sharing options at the bottom
+    st.markdown("---")
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("Save to Excel"):
+            saveToExcel(genInfo, hoods, comments, sign, edge_box_details)
+    with col2:
+        with st.expander("📤 Share Your Form Data", expanded=False):
+            st.write("Generate a link you can share with others. When they open the link, all your form data will be pre-filled.")
+            GI.display_shareable_link()
         
 def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
     wb = openpyxl.load_workbook('T&C_Templates.xlsx')
@@ -76,7 +137,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
 
     for k,v in hoods.items():
         #Capture Jet Hoods
-        if v.model in ['KVF', 'KVI', 'KCH-F', 'KCH-I', 'KSR-S', 'KSR-F', 'KSR-M', 'UVF', 'UVI', 'USR-S', 'USR-F', 'USR-M', 'UWF']:
+        if v.model in ['KVF', 'KVI', 'KCH-F', 'KCH-I', 'KSR-S', 'KSR-F', 'KSR-M', 'UVF', 'UVI', 'USR-S', 'USR-F', 'USR-M', 'UWF', 'CMW-FMOD']:
             colorFill(ws, row)
             ws[f'A{row}'].border = Border(top=Side(style='thin'),
             bottom=Side(style='thin'))
@@ -205,10 +266,10 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
             row+=1
             ws.merge_cells(f'A{row}:D{row}')
             if v.total_design_flow_ms:
-                genFont(ws, 'A', row, f'Total Percentage                                {round((totalFlowRate/v.total_design_flow_ms * 100),1)}%')
+                genFont(ws, 'A', row, f'Percentage of Design                                {round((totalFlowRate/v.total_design_flow_ms * 100),1)}%')
             sectionBorder(ws, row, 1, 5)
             row+=1
-            if v.model in ['KVF', 'KCH-F', 'UVF', 'USR-F', 'KSR-F']:
+            if v.model in ['KVF', 'KCH-F', 'UVF', 'USR-F', 'KSR-F', 'KWF', 'UWF', 'CMW-FMOD']:
                 #Supply Air Readings
                 row +=2
                 colorFill(ws, row)
@@ -326,7 +387,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
                 sectionBorder(ws, row, 1, 5)
                 row+=1
                 ws.merge_cells(f'A{row}:D{row}')    
-                genFont(ws, 'A', row, f'Total Percentage                                {totPercentage}%')
+                genFont(ws, 'A', row, f'Percentage of Design                                {totPercentage}%')
                 sectionBorder(ws, row, 1, 5)
                 row+=2
                 #Start of Result summary (Extract Air)
@@ -411,8 +472,142 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
                 sectionBorder(ws, row, 1, 9)
                 row += 1
 
+        elif v.model == 'CXW':
+            colorFill(ws, row)
+            ws[f'A{row}'].border = Border(top=Side(style='thin'),
+            bottom=Side(style='thin'))
+            ws.row_dimensions[row].height = 20
+            ws.merge_cells(f'A{row}:I{row}')
+            colorFill(ws, row)  # Apply the fill and border to the entire range
+            genFont(ws, 'A', row, "EXTRACT AIR DATA", "FFFFFF")
+            makeCenter(ws, 'A', row)
+            row+=1
+            
+            genFont(ws, 'A', row,f'Drawing Number: {v.drawingNum}')
+            fillBorder(ws, 'A', row)
+            iBorder(ws, 'i', row)
+            row+=1
+            
+            genFont(ws, 'A', row, f'Location: \t{v.location}')
+            fillBorder(ws, 'A', row)
+            iBorder(ws, 'i', row)
+            row+=1
+            
+            genFont(ws, 'A', row, f'Model: \tCXW')
+            fillBorder(ws, 'A', row)
+            iBorder(ws, 'i', row)
+            row+=1
+            
+            genFont(ws, 'A', row, f'Design Flowrate: \t{v.total_design_flow_ms} m³/s')
+            fillBorder(ws, 'A', row)
+            iBorder(ws, 'i', row)
+            row+=1
+            
+            genFont(ws, 'A', row, f'Quantity of Grills: \t{v.quantityOfSections}')
+            fillBorder(ws, 'A', row)
+            iBorder(ws, 'i', row)
+            row+=1
+            
+            genFont(ws, 'A', row, f'Grill Size (mm): \tx')
+            fillBorder(ws, 'A', row)
+            iBorder(ws, 'i', row)
+            row+=1
+            
+            genFont(ws, 'A', row, f'Calculation: \tQ = Av')
+            fillBorder(ws, 'A', row)
+            iBorder(ws, 'i', row)
+            row+=1
+            
+            colorFill(ws, row)
+            ws.merge_cells(f'A{row}:I{row}')
+            genFont(ws, 'A', row, "EXTRACT AIR READINGS", "FFFFFF")
+            makeCenter(ws, 'A', row)
+            row+=1
+            
+            # Column headers
+            ws.merge_cells(f'A{row}:B{row}')
+            genFont(ws, 'A', row, 'Anemometer Reading\n(Average m/s)')
+            makeCenter(ws, 'A', row)
+            
+            ws.merge_cells(f'C{row}:D{row}')
+            genFont(ws, 'C', row, 'Free Area\n(m²)')
+            makeCenter(ws, 'C', row)
+            
+            ws.merge_cells(f'E{row}:F{row}')
+            genFont(ws, 'E', row, 'Flowrate\n(m³/h)')
+            makeCenter(ws, 'E', row)
+            
+            ws.merge_cells(f'G{row}:I{row}')
+            genFont(ws, 'G', row, 'Flowrate\n(m³/s)')
+            makeCenter(ws, 'G', row)
+            
+            # Apply borders to all header cells
+            for col in range(1, 10):
+                ws.cell(row=row, column=col).border = Border(
+                    top=Side(style='thin'),
+                    bottom=Side(style='thin'),
+                    left=Side(style='thin'),
+                    right=Side(style='thin')
+                )
+            row+=1
+            
+            # Data rows
+            total_flowrate_ms = 0
+            for section, data in v.sections.items():
+                ws.merge_cells(f'A{row}:B{row}')
+                genFont(ws, 'A', row, f'{round(data["anemometer_reading"], 1)}')
+                makeCenter(ws, 'A', row)
+                
+                ws.merge_cells(f'C{row}:D{row}')
+                genFont(ws, 'C', row, f'{round(data["free_area"], 1)}')
+                makeCenter(ws, 'C', row)
+                
+                ws.merge_cells(f'E{row}:F{row}')
+                genFont(ws, 'E', row, f'{round(data["flowrate_m3h"], 1)}')
+                makeCenter(ws, 'E', row)
+                
+                ws.merge_cells(f'G{row}:I{row}')
+                genFont(ws, 'G', row, f'{round(data["flowrate_m3s"], 2)}')
+                makeCenter(ws, 'G', row)
+                
+                # Apply borders to all data cells
+                for col in range(1, 10):
+                    ws.cell(row=row, column=col).border = Border(
+                        top=Side(style='thin'),
+                        bottom=Side(style='thin'),
+                        left=Side(style='thin'),
+                        right=Side(style='thin')
+                    )
+                
+                total_flowrate_ms += data["flowrate_m3s"]
+                row+=1
+            # Add total row with color fill
+            colorFill(ws, row)
+            ws.merge_cells(f'A{row}:D{row}')
+           
 
-                        
+            # Apply borders to all cells in the total row
+            for col in range(1, 1):
+                ws.cell(row=row, column=col).border = Border(
+                    top=Side(style='thin'),
+                    bottom=Side(style='thin'),
+                    left=Side(style='thin'),
+                    right=Side(style='thin')
+                )
+            # Total Flowrate row
+            row+=1
+            ws.merge_cells(f'A{row}:D{row}')    
+            genFont(ws, 'A', row, f'Total Flowrate                                {round(total_flowrate_ms, 2)} m³/s')
+            sectionBorder(ws, row, 1, 5)
+            
+            # Percentage of Design row
+            row+=1
+            ws.merge_cells(f'A{row}:D{row}')    
+            if v.total_design_flow_ms:
+                percentage = round((total_flowrate_ms/v.total_design_flow_ms * 100), 1)
+                genFont(ws, 'A', row, f'Percentage of Design                                {percentage}%')
+            sectionBorder(ws, row, 1, 5)
+            row+=1
 
         elif v.model in ['KSR-S', 'KSR-F', 'KSR-M']:
             print('lol')
@@ -439,7 +634,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
         supply_actual_total = 0
 
         # Process Extract Air sections
-        if hood.model in ['KVF', 'KVI', 'KCH-F', 'KCH-I', 'KSR-S', 'KSR-F', 'KSR-M', 'UVF', 'UVI', 'USR-S', 'USR-F', 'USR-M']:
+        if hood.model in ['KVF', 'KVI', 'KCH-F', 'KCH-I', 'KSR-S', 'KSR-F', 'KSR-M', 'UVF', 'UVI', 'USR-S', 'USR-F', 'USR-M', 'CMW-FMOD']:
             for section_data in hood.sections.values():
                 extract_design_total = hood.total_design_flow_ms  # Use the total extract design flow
                 extract_actual_total += round((section_data["k_factor"] * math.sqrt(section_data["tab_reading"])) / 3600, 2)
@@ -461,7 +656,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
         # Calculate percentage and store results for each drawing
         if extract_design_total > 0:
             extract_summary.append({
-                "drawing_number": drawing_number,
+                "drawing_number": v.drawingNum,  # Use the actual drawing number instead of "TOTAL"
                 "design_flow_rate_total": extract_design_total,
                 "actual_flow_rate_total": round(extract_actual_total, 2),
                 "percentage": extract_percentage
@@ -510,7 +705,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
         makeCenter(ws, 'C', row)
         
         ws.merge_cells('E{0}:F{0}'.format(row))
-        genFont(ws, 'E', row, f"{result['actual_flow_rate_total']}")
+        genFont(ws, 'E', row, f"{round(result['actual_flow_rate_total'], 2)}")
         makeCenter(ws, 'E', row)
         
         ws.merge_cells('G{0}:I{0}'.format(row))
@@ -573,7 +768,8 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
         makeCenter(ws, 'C', row)
         
         ws.merge_cells('E{0}:F{0}'.format(row))
-        genFont(ws, 'E', row, f"{result['actual_flow_rate_total']}")
+        genFont(ws, 'E', row, f"{round(result['actual_flow_rate_total'], 2)}")
+        st.write(result['actual_flow_rate_total'])
         makeCenter(ws, 'E', row)
         
         ws.merge_cells('G{0}:I{0}'.format(row))
@@ -593,7 +789,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
     makeCenter(ws, 'C', row)
     
     ws.merge_cells('E{0}:F{0}'.format(row))
-    genFont(ws, 'E', row, f"{total_supply_actual}")
+    genFont(ws, 'E', row, f"{round(total_supply_actual, 2)}")
     makeCenter(ws, 'E', row)
     
     ws.merge_cells('G{0}:I{0}'.format(row))
@@ -693,13 +889,31 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
         signature_img = Image("resized_signature_image.png")
 
         # Step 4: Insert the signature into the Excel file
+        ws.merge_cells(f'A{row}:I{row}')
         genFont(ws, 'A', row, "Sign")
-        ws.merge_cells(f'A{row}:B{row}')
-        sectionBorder(ws, row, 1, 3)
-        row+=2
-        ws.add_image(signature_img, f"A{row}")  # Insert the signature at cell C{row}
-        ws.merge_cells(f'C{row}:I{row}')
-        row+=20
+        # Apply only left and right borders to the merged range
+        ws[f'A{row}'].border = Border(left=Side(style='thin'))
+        ws[f'I{row}'].border = Border(right=Side(style='thin'))
+        row += 1  # Move to the row under "Sign"
+        
+        start_row = row
+        # Create 6 vertical rows for signature
+        for i in range(6):
+            ws.merge_cells(f'A{start_row + i}:I{start_row + i}')
+            # Add left and right borders
+            ws[f'A{start_row + i}'].border = Border(left=Side(style='thin'))
+            ws[f'I{start_row + i}'].border = Border(right=Side(style='thin'))
+        
+        # Add bottom, left, and right borders to the last row
+        ws[f'A{start_row + 5}'].border = Border(left=Side(style='thin'), bottom=Side(style='thin'))
+        ws[f'I{start_row + 5}'].border = Border(right=Side(style='thin'), bottom=Side(style='thin'))
+        for col in ['B', 'C', 'D', 'E', 'F', 'G', 'H']:
+            ws[f'{col}{start_row + 5}'].border = Border(bottom=Side(style='thin'))
+        
+        # Add the signature image with adjusted size and position
+        ws.add_image(signature_img, f"D{start_row + 1}")  # Moved to column D and down one row
+        
+        row += 6
 
             
         ws.row_breaks.append(openpyxl.worksheet.pagebreak.Break(id=row))  # Break after Row 20 (before row 21)
@@ -719,7 +933,11 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
     
     # Provide the download link
     with open(updated_workbook_path, "rb") as file:
-        st.download_button(label=f"Download Report", data=file, file_name=f"Testing And Commissioning.xlsx")
+        st.download_button(
+            label="Download Report", 
+            data=file, 
+            file_name=f"{genInfo['project_number']} {genInfo['project_name']} - Canopy Commissioning Report.xlsx"
+        )
       
 def iBorder(ws, letter, row):
     ws[f'i{row}'].border = Border(right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
