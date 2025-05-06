@@ -104,19 +104,19 @@ def getGenInfo():
     
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("<h2 style='text-align:center; margin-bottom:-40px;'>Client</h2>", unsafe_allow_html=True)
-        client = st.text_input('.', key='client', label_visibility='hidden')
+        # st.markdown("<h2 style='text-align:center; margin-bottom:-40px;'>Client</h2>", unsafe_allow_html=True)
+        client = st.text_input('Client', key='client')
     with col2:
-        st.markdown("<h2 style='text-align:center;margin-bottom:-40px;'>Project Name</h2>", unsafe_allow_html=True)
-        projectName = st.text_input('.', key='projectName', label_visibility='hidden')
+        # st.markdown("<h2 style='text-align:center;margin-bottom:-40px;'>Project Name</h2>", unsafe_allow_html=True)
+        projectName = st.text_input('Project Name', key='projectName')
     with col1:
-        st.markdown("<h2 style='text-align:center;margin-bottom:-40px;'>Project Number</h2>", unsafe_allow_html=True)
-        projectNumber= st.text_input('.', key='projectNumber', label_visibility='hidden')
+        # st.markdown("<h2 style='text-align:center;margin-bottom:-40px;'>Project Number</h2>", unsafe_allow_html=True)
+        projectNumber= st.text_input('Project Number', key='projectNumber')
     with col2:
-        st.markdown("<h2 style='text-align:center;margin-bottom:-40px;'>Date Of Visit</h2>", unsafe_allow_html=True)
-        DateOfVisit = st.date_input('.', key='date', label_visibility='hidden')
-    st.markdown("<h2 style='text-align:center;margin-bottom:-40px;'>Engineer(s)</h2>", unsafe_allow_html=True)
-    engineers = st.text_input('.', key='engineers', label_visibility='hidden')
+        # st.markdown("<h2 style='text-align:center;margin-bottom:-40px;'>Date Of Visit</h2>", unsafe_allow_html=True)
+        DateOfVisit = st.date_input('Date', key='date')
+    # st.markdown("<h2 style='text-align:center;margin-bottom:-40px;'>Engineer(s)</h2>", unsafe_allow_html=True)
+    engineers = st.text_input('Engineers', key='engineers')
     
     return {
         'client': client,
@@ -131,14 +131,22 @@ def get_comments():
     if 'comments' in st.session_state and not isinstance(st.session_state['comments'], str):
         st.session_state['comments'] = str(st.session_state['comments'])
         
-    comments = st.text_area('Comments (Enter Each in new space)', key='comments')
-    comments_split = comments.split('\n')
+    comments = st.text_area('Comments (Enter multiple comments separated by "/")', key='comments')
+    # Split by slash instead of newline to allow multiple comments in one line
+    comments_split = comments.split('/')
+    # Trim whitespace from each comment
+    comments_split = [comment.strip() for comment in comments_split if comment.strip()]
     return comments_split
 
 def get_sign():
+    """Get signature input and ensure it persists between reruns"""
     st.write("Signed By Engineer(s)")
-
-    # Use session state to maintain the drawing across re-renders
+    
+    # Initialize signature data in session state if not already present
+    if 'signature_data' not in st.session_state:
+        st.session_state.signature_data = None
+    
+    # Create the canvas widget
     canvas_result = st_canvas(
         stroke_width=5,
         stroke_color="#000000",
@@ -146,14 +154,24 @@ def get_sign():
         height=150,
         width=700,
         drawing_mode="freedraw",
-        key="canvas_test"
+        key="signature_canvas"
     )
     
-    # If we have a signature in session state and the canvas is empty, use the saved one
-    if 'signature_data' in st.session_state and st.session_state.signature_data is not None:
-        if canvas_result.image_data is None:
-            canvas_result.image_data = st.session_state.signature_data
-            
+    # If a new drawing is provided, save it to session state
+    if canvas_result.image_data is not None:
+        # Compare with session state to see if it's different (new drawing)
+        st.session_state.signature_data = canvas_result.image_data
+    
+    # If nothing was drawn but we have saved data, restore it
+    elif st.session_state.signature_data is not None:
+        # This doesn't directly update the canvas itself, but ensures 
+        # the image_data is returned for processing
+        canvas_result.image_data = st.session_state.signature_data
+        
+        # Show the stored signature as an image below the canvas
+        # This ensures the user can always see their signature
+        st.image(st.session_state.signature_data, caption="Your saved signature", width=700)
+    
     return canvas_result
 
 def create_shareable_link():
