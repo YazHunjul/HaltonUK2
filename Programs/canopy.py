@@ -547,12 +547,11 @@ def createCJHood(selection, num):
             
             # Instead of setting the session state value and then reading it,
             # just use a direct value
-            total_design_flow_ms = st.number_input(f'Extract Design Airflow', 
-                                                 key=design_flow_key, 
-                                                 
-                                                 min_value=0.0, 
-                                                 format="%.3f",
-                                                 value=0.0)
+            total_design_flow_ms = st.number_input(f'Design Airflow', 
+                                                key=design_flow_key, 
+                                                min_value=0.0,
+                                                step=0.001,
+                                                value=0.0)
             
             # Show supply design flow for supply-capable hoods
             if selection == 'CMW-FMOD':
@@ -601,10 +600,12 @@ def createCJHood(selection, num):
             if slot_length_key in st.session_state and not isinstance(st.session_state[slot_length_key], (int, float)):
                 try:
                     st.session_state[slot_length_key] = int(float(st.session_state[slot_length_key]))
+                    if st.session_state[slot_length_key] not in [1000, 1500, 2000, 2500, 3000]:
+                        st.session_state[slot_length_key] = 1000
                 except (ValueError, TypeError):
                     st.session_state[slot_length_key] = 1000  # Default value
             
-            slot_length = st.number_input(f'Length of Slot (mm)', min_value=1, value=1000, step=1, key=slot_length_key)
+            slot_length = st.number_input(f'Length of Slot (mm)', min_value=1000, max_value=3000, value=1000, step=500, key=slot_length_key)
         
         with slot_col2:
             # st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-70px;'>Width of Slot (mm)<h4>", unsafe_allow_html=True)
@@ -613,10 +614,12 @@ def createCJHood(selection, num):
             if slot_width_key in st.session_state and not isinstance(st.session_state[slot_width_key], (int, float)):
                 try:
                     st.session_state[slot_width_key] = int(float(st.session_state[slot_width_key]))
+                    if st.session_state[slot_width_key] < 1 or st.session_state[slot_width_key] > 200:
+                        st.session_state[slot_width_key] = 85
                 except (ValueError, TypeError):
                     st.session_state[slot_width_key] = 85  # Default value
                     
-            slot_width = st.number_input(f'Width of Slot (mm)', min_value=1, value=85, step=1, key=slot_width_key)
+            slot_width = st.number_input(f'Width of Slot (mm)', min_value=1, max_value=200, value=85, step=1, key=slot_width_key)
         marvel_enabled = st.checkbox(f"{selection} ({canopyLocation}) With M.A.R.V.E.L. System?", key=f"marvel_{selection}_{num}")
         # Create the hood object
         hood = cjHoods(drawingNum, canopyLocation, selection, num, quantity, total_design_flow_ms, total_supply_design_flow_ms)
@@ -641,105 +644,21 @@ def createCJHood(selection, num):
                 st.markdown("<hr style='border:1px solid white;'>", unsafe_allow_html=True)
                 st.markdown("### Extract Air Readings")
                 
-                for i in range(1, quantity + 1):
-                    st.markdown(f"#### Section {i}")
-                    
-                    # Create columns based on whether M.A.R.V.E.L. is enabled
-                    if marvel_enabled:
-                        cols = st.columns(4)  # 4 columns for TAB, min%, idle%, design
-                    else:
-                        cols = st.columns(1)  # Just 1 column for TAB reading
-                    
-                    # TAB reading input
-                    with cols[0]:
-                        # st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-60px;'>Anemometer Reading<h4>", unsafe_allow_html=True)
-                        tab_reading_key = f"tab_{selection}_{i}"
-                        # Ensure tab_reading is a number
-                        if tab_reading_key in st.session_state and not isinstance(st.session_state[tab_reading_key], (int, float)):
-                            try:
-                                st.session_state[tab_reading_key] = float(st.session_state[tab_reading_key])
-                            except (ValueError, TypeError):
+                for i in range(quantity):
+                    tab_reading_key = f'tab_reading_{selection}_{num}_{i}'
+                    if tab_reading_key in st.session_state and not isinstance(st.session_state[tab_reading_key], (int, float)):
+                        try:
+                            st.session_state[tab_reading_key] = float(st.session_state[tab_reading_key])
+                            if st.session_state[tab_reading_key] < 0.0:
                                 st.session_state[tab_reading_key] = 0.0
-                        
-                        tab_reading = st.number_input(f'Anemometer Reading', value=0.0, step=0.1, key=tab_reading_key)
+                        except (ValueError, TypeError):
+                            st.session_state[tab_reading_key] = 0.0
                     
-                    # M.A.R.V.E.L. specific inputs if enabled
-                    marvel_data = {}
-                    if marvel_enabled:
-                        with cols[1]:
-                            # st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-60px;'>Min (%)<h4>", unsafe_allow_html=True)
-                            min_pct_key = f'min_pct_{selection}_{i}_{num}'
-                            # Ensure min_pct is a number
-                            if min_pct_key in st.session_state and not isinstance(st.session_state[min_pct_key], (int, float)):
-                                try:
-                                    st.session_state[min_pct_key] = float(st.session_state[min_pct_key])
-                                except (ValueError, TypeError):
-                                    st.session_state[min_pct_key] = 30.0
-                            
-                            min_pct = st.number_input(f'Min (%)', min_value=0.0, max_value=100.0, value=30.0, step=0.1, key=min_pct_key)
-                            marvel_data['min_pct'] = min_pct
-                        
-                        with cols[2]:
-                            # st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-60px;'>Idle (%)<h4>", unsafe_allow_html=True)
-                            idle_pct_key = f'idle_pct_{selection}_{i}_{num}'
-                            # Ensure idle_pct is a number
-                            if idle_pct_key in st.session_state and not isinstance(st.session_state[idle_pct_key], (int, float)):
-                                try:
-                                    st.session_state[idle_pct_key] = float(st.session_state[idle_pct_key])
-                                except (ValueError, TypeError):
-                                    st.session_state[idle_pct_key] = 70.0
-                                    
-                            idle_pct = st.number_input(f'Idle (%)', min_value=0.0, max_value=100.0, value=70.0, step=0.1, key=idle_pct_key)
-                            marvel_data['idle_pct'] = idle_pct
-                        
-                        with cols[3]:
-                            # st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-60px;'>Design (m³/s)<h4>", unsafe_allow_html=True)
-                            design_flow_per_section = 0.0
-                            design_flow_key = f'design_flow_{selection}_{i}_{num}'
-                            # Ensure design_flow is a number
-                            if design_flow_key in st.session_state and not isinstance(st.session_state[design_flow_key], (int, float)):
-                                try:
-                                    st.session_state[design_flow_key] = float(st.session_state[design_flow_key])
-                                except (ValueError, TypeError):
-                                    st.session_state[design_flow_key] = 0.0
-                                    
-                            design_flow = st.number_input(f'Design (m³/s)', min_value=0.0, value=0.0, step=0.001, key=design_flow_key)
-                            marvel_data['design_flow'] = design_flow
-                    
-                    # Ensure tab_reading is a float for safe comparison
-                    try:
-                        tab_reading_float = float(tab_reading)
-                    except (ValueError, TypeError):
-                        tab_reading_float = 0.0
-                        
-                    if tab_reading_float > 0.0:
-                        # Calculate flowrates using k-factor method
-                        flowrate_m3h = k_factor * math.sqrt(tab_reading_float)
-                        flowrate_m3s = flowrate_m3h / 3600
-                        flowrate_m3s = round(flowrate_m3s, 3)  # Round to 3 decimal places
-                        
-                        # Store values in the hood sections
-                        section_data = {
-                            "k_factor": k_factor,
-                            "tab_reading": tab_reading,
-                            "flowrate_m3s": flowrate_m3s,
-                            "flowrate_m3h": round(flowrate_m3h)
-                        }
-                        
-                        # Add M.A.R.V.E.L. data if enabled
-                        if marvel_enabled:
-                            section_data.update(marvel_data)
-                        
-                        hood.sections[str(i)] = section_data
-                        
-                        # Show calculated values
-                        col1, col2, col3 = st.columns(3)
-                        # with col1:
-                        #     st.write(f"K-Factor: {k_factor} m³/h")
-                        # with col2:
-                        #     st.write(f"Flowrate: {round(flowrate_m3h)} m³/h")
-                        # with col3:
-                        #     st.write(f"Flowrate: {flowrate_m3s} m³/s")
+                    tab_reading = st.number_input(f'Section {i+1} TAB Reading', 
+                                                key=tab_reading_key,
+                                                min_value=0.0,
+                                                step=0.001,
+                                                format="%.3f")
             
             # Add M.A.R.V.E.L. to checklist if enabled
             if marvel_enabled:
@@ -788,12 +707,11 @@ def createCJHood(selection, num):
             
             # Instead of setting the session state value and then reading it,
             # just use a direct value
-            total_design_flow_ms = st.number_input('Extract Design Airflow', 
-                                                 key=design_flow_key, 
-                                                  
-                                                 min_value=0.0, 
-                                                 format="%.3f",
-                                                 value=0.0)
+            total_design_flow_ms = st.number_input(f'Design Airflow', 
+                                                key=design_flow_key, 
+                                                min_value=0.0,
+                                                step=0.001,
+                                                value=0.0)
             
             # Show supply design flow for supply-capable hoods
             if selection in ['KVF', 'KCH-F', 'UVF', 'USR-F', 'KSR-F', 'KWF', 'UWF'] or (selection == 'CMW-FMOD'):
@@ -947,36 +865,58 @@ def createCXWHood(selection, num):
         if marvel_enabled:
             with cols[1]:
                 min_pct_key = f'min_pct_{selection}_{i}_{num}'
-                # Ensure min_pct is a number
                 if min_pct_key in st.session_state and not isinstance(st.session_state[min_pct_key], (int, float)):
                     try:
                         st.session_state[min_pct_key] = float(st.session_state[min_pct_key])
+                        if st.session_state[min_pct_key] < 0.0 or st.session_state[min_pct_key] > 100.0:
+                            st.session_state[min_pct_key] = 30.0
                     except (ValueError, TypeError):
-                        st.session_state[min_pct_key] = 0.0
-                min_pct = st.number_input('Min %', key=min_pct_key, min_value=0.0, max_value=100.0, value=0.0, step=0.1)
+                        st.session_state[min_pct_key] = 30.0
+                
+                min_pct = st.number_input(f'Min (%)', 
+                                        min_value=0.0, 
+                                        max_value=100.0, 
+                                        value=30.0, 
+                                        step=0.1, 
+                                        key=min_pct_key,
+                                        format="%.1f")
                 marvel_data['min_pct'] = min_pct
             
             with cols[2]:
                 idle_pct_key = f'idle_pct_{selection}_{i}_{num}'
-                # Ensure idle_pct is a number
                 if idle_pct_key in st.session_state and not isinstance(st.session_state[idle_pct_key], (int, float)):
                     try:
                         st.session_state[idle_pct_key] = float(st.session_state[idle_pct_key])
+                        if st.session_state[idle_pct_key] < 0.0 or st.session_state[idle_pct_key] > 100.0:
+                            st.session_state[idle_pct_key] = 70.0
                     except (ValueError, TypeError):
-                        st.session_state[idle_pct_key] = 0.0
-                idle_pct = st.number_input('Idle %', key=idle_pct_key, min_value=0.0, max_value=100.0, value=0.0, step=0.1)
+                        st.session_state[idle_pct_key] = 70.0
+                                    
+                idle_pct = st.number_input(f'Idle (%)', 
+                                         min_value=0.0, 
+                                         max_value=100.0, 
+                                         value=70.0, 
+                                         step=0.1, 
+                                         key=idle_pct_key,
+                                         format="%.1f")
                 marvel_data['idle_pct'] = idle_pct
             
             with cols[3]:
-                # st.markdown(f"<h4 style='text-align: center;margin-top: 30px;margin-bottom:-60px;'>Design (m³/s)<h4>", unsafe_allow_html=True)
                 design_flow_key = f'design_flow_{selection}_{i}_{num}'
-                # Ensure design_flow is a number
                 if design_flow_key in st.session_state and not isinstance(st.session_state[design_flow_key], (int, float)):
                     try:
                         st.session_state[design_flow_key] = float(st.session_state[design_flow_key])
+                        if st.session_state[design_flow_key] < 0.0:
+                            st.session_state[design_flow_key] = 0.0
                     except (ValueError, TypeError):
                         st.session_state[design_flow_key] = 0.0
-                design_flow = st.number_input(f'Design Flow (m³/s)', min_value=0.0, value=0.0, step=0.001, key=design_flow_key)
+                                    
+                design_flow = st.number_input(f'Design (m³/s)', 
+                                            min_value=0.0, 
+                                            value=0.0, 
+                                            step=0.001, 
+                                            key=design_flow_key,
+                                            format="%.3f")
                 marvel_data['design_flow'] = design_flow
         
         # Calculate flowrates with precise formatting

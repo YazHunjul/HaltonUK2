@@ -162,7 +162,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
     bottom=Side(style='thin')
 )
 # Should be fixed here
-    st.write(hoods.items())
+    # st.write(hoods.items())
     for k,v in hoods.items():
         #Capture Jet Hoods
         if v.model in ['KVF', 'KVI', 'KCH-F', 'KCH-I', 'KSR-S', 'KSR-F', 'KSR-M', 'UVF', 'UVI', 'USR-S', 'USR-F', 'USR-M', 'UWF'] or (v.model in ['CMW-FMOD', 'CMW-IMOD'] and 'slot_length' not in v.sections):
@@ -295,7 +295,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
                 
                 if isinstance(info, dict):  # Make sure info is a dictionary before accessing
                     # Calculate flowrate based on hood type
-                    st.write(v.model)
+                    # `st.write(v.model)
                     if v.model == 'CXW':
                         if 'flowrate_m3s' in info:
                             flowrate_m3s = info['flowrate_m3s']
@@ -1102,6 +1102,71 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
             
             row+=2
 
+        elif v.model in ['UVF', 'UVI']:
+            colorFill(ws, row)
+            ws.merge_cells(f'A{row}:I{row}')
+            genFont(ws, 'A', row, "EXTRACT AIR DATA", "FFFFFF")
+            makeCenter(ws, 'A', row)
+            row+=1
+            
+            # Basic hood information in CXW style format
+            genFont(ws, 'A', row, f'Drawing Number')
+            genFont(ws, 'C', row, f'{v.drawingNum}')
+            ws.merge_cells(f'A{row}:B{row}')
+            ws.merge_cells(f'C{row}:I{row}')
+            sectionBorder(ws, row, 1, 3)
+            sectionBorder(ws, row, 3, 10)
+            row+=1
+            
+            genFont(ws, 'A', row, f'Location')
+            genFont(ws, 'C', row, f'{v.location}')
+            ws.merge_cells(f'A{row}:B{row}')
+            ws.merge_cells(f'C{row}:I{row}')
+            sectionBorder(ws, row, 1, 3)
+            sectionBorder(ws, row, 3, 10)
+            row+=1
+            
+            genFont(ws, 'A', row, f'Model')
+            genFont(ws, 'C', row, f'{v.model}')
+            ws.merge_cells(f'A{row}:B{row}')
+            ws.merge_cells(f'C{row}:I{row}')
+            sectionBorder(ws, row, 1, 3)
+            sectionBorder(ws, row, 3, 10)
+            row+=1
+            
+            genFont(ws, 'A', row, f'Design Flowrate (m³/s)')
+            genFont(ws, 'C', row, f'{v.total_design_flow_ms}')
+            ws.merge_cells(f'A{row}:B{row}')
+            ws.merge_cells(f'C{row}:I{row}')
+            sectionBorder(ws, row, 1, 3)
+            sectionBorder(ws, row, 3, 10)
+            row+=1
+            
+            genFont(ws, 'A', row, f'Quantity of Sections')
+            genFont(ws, 'C', row, f'{v.quantityOfSections}')
+            ws.merge_cells(f'A{row}:B{row}')
+            ws.merge_cells(f'C{row}:I{row}')
+            sectionBorder(ws, row, 1, 3)
+            sectionBorder(ws, row, 3, 10)
+            row+=1
+            
+            # Add With M.A.R.V.E.L. row
+            marvel_status = "Yes" if "M.A.R.V.E.L. System" in v.checklist else "No"
+            genFont(ws, 'A', row, f'With M.A.R.V.E.L.')
+            genFont(ws, 'C', row, f'{marvel_status}')
+            ws.merge_cells(f'A{row}:B{row}')
+            ws.merge_cells(f'C{row}:I{row}')
+            sectionBorder(ws, row, 1, 3)
+            sectionBorder(ws, row, 3, 10)
+            row+=1
+            
+            # Add section readings header
+            colorFill(ws, row)
+            ws.merge_cells(f'A{row}:I{row}')
+            genFont(ws, 'A', row, "EXTRACT AIR READINGS", "FFFFFF")
+            makeCenter(ws, 'A', row)
+            row+=1
+
         row+=3
         #Results
        # Results Summary - Extract Air
@@ -1125,7 +1190,7 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
 
         # Process Extract Air sections
         # st.write(hood)
-        if hood.model in ['KVF', 'KVI', 'KCH-F', 'KCH-I', 'KSR-S', 'KSR-F', 'KSR-M', 'UVF', 'UVI', 'USR-S', 'USR-F', 'USR-M'] or (hood.model == 'CMW-FMOD' and 'slot_length' not in hood.sections):
+        if hood.model in ['KVF', 'KVI', 'KCH-F', 'KCH-I', 'KSR-S', 'KSR-F', 'KSR-M', 'UVF', 'UVI', 'USR-S', 'USR-F', 'USR-M', 'UWF'] or (hood.model == 'CMW-FMOD' and 'slot_length' not in hood.sections):
             for section_data in hood.sections.values():
                 if isinstance(section_data, dict) and "k_factor" in section_data and "tab_reading" in section_data:
                     extract_design_total = hood.total_design_flow_ms  # Use the total extract design flow
@@ -1465,30 +1530,16 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
     sectionBorder(ws, row, 1, 3)
     sectionBorder(ws, row, 3, 10)
     row += 1
+
+    # Only add signature if it exists
     if sign.image_data is not None:
-        img = PILImage.fromarray(sign.image_data.astype('uint8'), 'RGBA')
-
-        # Step 1: Resize the image (change dimensions as needed, e.g., 150x75 pixels)
-        resized_img = img.resize((200, 75))  # Resize to desired dimensions
-
-        # Step 2: Save the resized image in-memory and to a file
-        img_io = io.BytesIO()
-        resized_img.save(img_io, format='PNG')
-        img_io.seek(0)
-
-        with open("resized_signature_image.png", "wb") as f:
-            f.write(img_io.read())
-
-        # Step 3: Load the resized image into openpyxl
-        signature_img = Image("resized_signature_image.png")
-
-        # Step 4: Insert the signature into the Excel file
-        ws.merge_cells(f'A{row}:I{row}')
+        # Add "Sign" row
         genFont(ws, 'A', row, "Sign")
+        ws.merge_cells(f'A{row}:I{row}')
         # Apply only left and right borders to the merged range
         ws[f'A{row}'].border = Border(left=Side(style='thin'))
         ws[f'I{row}'].border = Border(right=Side(style='thin'))
-        row += 1  # Move to the row under "Sign"
+        row += 1
         
         start_row = row
         # Create 6 vertical rows for signature
@@ -1505,6 +1556,22 @@ def saveToExcel(genInfo, hoods, comments, sign, edge_box_details):
             ws[f'{col}{start_row + 5}'].border = Border(bottom=Side(style='thin'))
         
         # Add the signature image with adjusted size and position
+        img = PILImage.fromarray(sign.image_data.astype('uint8'), 'RGBA')
+        # Step 1: Resize the image (change dimensions as needed, e.g., 150x75 pixels)
+        resized_img = img.resize((200, 75))  # Resize to desired dimensions
+        
+        # Step 2: Save the resized image in-memory and to a file
+        img_io = io.BytesIO()
+        resized_img.save(img_io, format='PNG')
+        img_io.seek(0)
+        
+        with open("resized_signature_image.png", "wb") as f:
+            f.write(img_io.read())
+        
+        # Step 3: Load the resized image into openpyxl
+        signature_img = Image("resized_signature_image.png")
+        
+        # Step 4: Insert the signature into the Excel file
         ws.add_image(signature_img, f"D{start_row + 1}")  # Moved to column D and down one row
         
         row += 6

@@ -140,37 +140,46 @@ def get_comments():
 
 def get_sign():
     """Get signature input and ensure it persists between reruns"""
-    st.write("Signed By Engineer(s)")
     
     # Initialize signature data in session state if not already present
     if 'signature_data' not in st.session_state:
         st.session_state.signature_data = None
     
-    # Create the canvas widget
-    canvas_result = st_canvas(
-        stroke_width=5,
-        stroke_color="#000000",
-        background_color="#FFFFFF",
-        height=150,
-        width=700,
-        drawing_mode="freedraw",
-        key="signature_canvas"
-    )
+    # Use a checkbox instead of a button
+    show_signature = st.checkbox("Add Signature", key="show_signature_checkbox")
     
-    # If a new drawing is provided, save it to session state
-    if canvas_result.image_data is not None:
-        # Compare with session state to see if it's different (new drawing)
-        st.session_state.signature_data = canvas_result.image_data
-    
-    # If nothing was drawn but we have saved data, restore it
-    elif st.session_state.signature_data is not None:
-        # This doesn't directly update the canvas itself, but ensures 
-        # the image_data is returned for processing
-        canvas_result.image_data = st.session_state.signature_data
+    # Only show signature canvas and related elements if show_signature is True
+    if show_signature:
+        st.write("Signed By Engineer(s)")
         
-        # Show the stored signature as an image below the canvas
-        # This ensures the user can always see their signature
-        st.image(st.session_state.signature_data, caption="Your saved signature", width=700)
+        # Create the canvas widget
+        canvas_result = st_canvas(
+            stroke_width=5,
+            stroke_color="#000000",
+            background_color="#FFFFFF",
+            height=150,
+            width=700,
+            drawing_mode="freedraw",
+            key="signature_canvas"
+        )
+        
+        # If a new drawing is provided, save it to session state
+        if canvas_result.image_data is not None:
+            # Compare with session state to see if it's different (new drawing)
+            st.session_state.signature_data = canvas_result.image_data
+        
+        # If nothing was drawn but we have saved data, restore it
+        elif st.session_state.signature_data is not None:
+            # This doesn't directly update the canvas itself, but ensures 
+            # the image_data is returned for processing
+            canvas_result.image_data = st.session_state.signature_data
+            
+            # Show the stored signature as an image below the canvas
+            # This ensures the user can always see their signature
+            st.image(st.session_state.signature_data, caption="Your saved signature", width=700)
+    else:
+        # Create a dummy canvas_result when signature is hidden
+        canvas_result = type('CanvasResult', (), {'image_data': st.session_state.signature_data})()
     
     return canvas_result
 
